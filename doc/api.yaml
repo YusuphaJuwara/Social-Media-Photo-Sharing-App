@@ -1,0 +1,1477 @@
+openapi: 3.0.0
+info:
+  description: |-
+    This concerns the "Web and Software Architecture" course to develop from scratch a web application that allows users to share photos of special moments.
+    It allows users to like, comment on posts, ban other users, and so forth.
+
+    Note: "Banning" and "setting a profile to private" are different. Setting a profile to public (private = false), means that any user except those whom he bans can see the user's profile, comment, like, etc without following the user. This is a feature much like "explore" in many social media. If a user wants only his followers to see his feeds except those banned, he should set it to private. Otherwise, even those who did not follow him and were not banned by him can see his feeds.
+  title: Photo Sharing App
+  version: 1.0.0
+  contact:
+    name: Yusupha Juwara
+    url: https://github.com/YusuphaJuwara
+    email: yusuphajuwara@gmail.com
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+components:
+  parameters:
+  #The IDs have different names, but same schema. I prefer the names like these.
+    userID:  #Arbitrary name for the definition that will be used to refer to it. Not necessarily the same as the parameter name.
+      in: path
+      name: user-id
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: The user ID
+    postID:
+      in: path
+      name: post-id
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: The post ID
+    photoID:
+      in: path
+      name: photo-id
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: The photo ID
+    followID:
+      in: path
+      name: follow-id
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: A user ID
+    banID:
+      in: path
+      name: ban-user
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: A banned user ID
+    commentID:
+      in: path
+      name: comment-id
+      required: true
+      schema:   
+        $ref: "#/components/schemas/ID"
+      description: A comment ID
+    hashtag:
+      in: path
+      name: hashtag
+      required: true
+      schema:   
+        $ref: "#/components/schemas/hashtag"
+      description: A hashtag ID
+    searchByNameOrHashtag:
+      in: query
+      name: name-hashtag
+      required: true
+      schema:
+        oneOf:
+          - $ref: "#/components/schemas/name"
+          - $ref: "#/components/schemas/hashtag"
+      description: Search by name or hashtag
+
+  securitySchemes:
+    bearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: uuid    # optional, arbitrary value for documentation purposes
+
+  responses:
+    NoContent204:
+      description: Successful.
+    BadRequest400:
+      description: |-
+        The request was not compliant with the documentation (eg. missing fields, etc).
+        Further info in server logs.
+    UnAuth401:
+      description: |-
+        Access token is missing or invalid.
+        The request was not authorized. The user must be authorized first to perform this request.
+    Forbidden403:
+      description: |-
+        Trying to access a resource that the user should not. This is forbidden action.
+        E.g., 
+        a banned user trying to get an info about the user who banned him, 
+        or trying to delete a comment when the user is not the one who placed the comment or on whose post the comment was placed, etc.
+        Further info in server logs.
+    NotFound404:
+      description: Not found.
+    InternalServerError500:
+      description: |-
+        The server encountered an internal error.
+        Further info in server logs.
+
+  schemas:
+    ID:
+      description: The unique identifier. It is 36 characters containing 4 "-". 
+      type: string
+      format: uuid
+
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      minLength: 36
+      maxLength: 36
+      example: 123e4567-e89b-12d3-a456-426655440000
+    gender:
+      description: The gender of the user
+      type: string
+      enum: 
+        - Male
+        - Female
+      example: Male
+      
+      pattern: '^(Male|Female)$'
+      minLength: 4
+      maxLength: 6
+    name:
+      description: A string with a pattern that will be used elsewhere in the file such as profile name (not username for login).
+      type: string
+      pattern: '^(?=.*?[a-zA-Z]).{8,20}$' # 8 to 20 chars of at least 1 alph. No new line char
+      minLength: 8
+      maxLength: 20
+      example: "Push Dollar $"
+    username:
+      description: |- 
+        The username contains at least one alphabet and 7 or more other alphanumeric characters in [a-zA-Z0-9] to have a minLength of 8.
+        This is only for login purposes. The profile name is the one used to display on the user's profile.
+      type: string
+      pattern: '^(?=.*?[a-zA-Z])[a-zA-Z0-9]{8,20}$'
+      example: Maria2001
+      minLength: 8
+      maxLength: 20
+    boolean:
+      description: true or false
+      type: boolean
+      example: true
+    date-time:
+      description: The date and time the post/comment was posted.
+      type: string
+      format: date-time
+      example: '2017-07-21T17:32:28Z'
+
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+      minLength: 20   
+      maxLength: 20
+    date:
+      description: The date.
+      type: string
+      format: date
+      example: '2017-07-21'
+
+      pattern: '^\d{4}-\d{2}-\d{2}$'
+      minLength: 10   
+      maxLength: 10
+    message:
+      description: The message as a comment or caption on a post.
+      type: string
+      pattern: '(?=.*?[a-zA-Z])[^]'  # Any char including new lines of at least one alphabet.
+      minLength: 2
+      maxLength: 1000
+      example: "Wow, that's a beautifull family photo!!!"
+    hashtag:
+      description: |-
+        Hashtag contains at least one alphabet and zero or more other alphanumeric characters in [a-zA-Z0-9].
+      type: string
+      pattern: '^(?=.*?[a-zA-Z])[a-zA-Z0-9]{1,20}$'
+      minLength: 1
+      maxLength: 20
+      example: "covid19"
+    hashtags:
+      description: Every post also includes the hashtags
+      type: array
+      minItems: 0
+      maxItems: 100
+      items:  
+        $ref: '#/components/schemas/hashtag'
+    count:
+      description: The total count of the object such as total number of likes, total number of comments, etc.
+      type: integer
+      minimum: 0
+      example: 1000
+    ids-array:
+      description: array of uuid's.
+      type: array
+      minItems: 0
+      maxItems: 1000
+      items:  
+        $ref: '#/components/schemas/ID'
+
+    user:
+      type: object
+      description: The user-associated details.
+      properties:
+        user-id:  
+          $ref: '#/components/schemas/ID'
+        profile-name:   
+          $ref: '#/components/schemas/name'
+        gender:   
+          $ref: "#/components/schemas/gender"
+        birth-date:   
+          $ref: '#/components/schemas/date'
+        profile-message:   
+          $ref: '#/components/schemas/message'
+        profile-photo-id:   
+          $ref: '#/components/schemas/ID'
+        user-post-ids:  
+            $ref: '#/components/schemas/ids-array'
+        post-count:  
+          $ref: '#/components/schemas/count'
+        follower-count:  
+          $ref: '#/components/schemas/count'
+        following-count:   
+          $ref: '#/components/schemas/count'
+
+    photo:
+      description: The photo in a PNG format. The length is in Bytes.
+      type: string
+      format: binary
+
+      minLength: 1
+      maxLength: 1000000
+
+    comment: 
+      description: details about comment.
+      type: object
+      properties:
+        comment-id:   
+          $ref: '#/components/schemas/ID'
+        post-id:  
+          $ref: '#/components/schemas/ID'
+        user-id:  
+          $ref: '#/components/schemas/ID'
+        date-time:  
+          $ref: '#/components/schemas/date-time'
+        message:  
+          $ref: '#/components/schemas/message'
+
+    post: 
+      type: object
+      description: details related to post.
+      properties:
+        post-id:  
+          $ref: '#/components/schemas/ID'
+        photo-id:   
+          $ref: '#/components/schemas/ID'
+        user-id:  
+          $ref: '#/components/schemas/ID'
+        date-time:  
+          $ref: '#/components/schemas/date-time'
+        caption:  
+          $ref: '#/components/schemas/message'
+        like-count:  
+          $ref: '#/components/schemas/count'
+        comment-count:   
+          $ref: '#/components/schemas/count'
+        hashtags: 
+            $ref: '#/components/schemas/hashtags'
+
+# 2) Apply security globally to all operations except log-in
+security:
+  - bearerToken: []
+
+tags:
+  - name: User
+    description: Users' information
+  - name: login
+  - name: Follow
+    description: The follows
+  - name: Ban
+    description: Whom the user bans
+  - name: Photo
+    description: A single photo without any metadata.
+  - name: Post
+    description: A single photo with metadata such as likes, comments, etc.
+  - name: Likes
+    description: Likes on a post
+  - name: Comments
+    description: Comments on a post
+  - name: Hashtag
+    description: Hashtags on posts
+  - name: Search
+    description: Searches a user by name or post by hashtag
+
+paths:
+  /users/:
+    get:
+      tags: [User]
+      operationId: getAllUsers
+      summary: Get an array of information of all users
+      description: |-
+        For each user in our database, this gets it's information. 
+        But the user trying to get users' info cannot get those users who banned him or those whom he did not "follow" and set their profiles to private.
+      responses:
+        "200":
+          description: Array of users
+          content:
+            application/json:
+              schema:
+                description: Array of users' info
+                type: array
+                minItems: 0
+                maxItems: 1000
+                items:  
+                  $ref: "#/components/schemas/user"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /session:
+    post:
+      tags: [login]
+      security: []  #No security here, override the security defined before.
+      summary: Logs in the user
+      description: |-
+        If the user does not exist, it will be created, and an identifier is returned.
+        If the user exists, the user identifier is returned.
+
+        This identifier uniquely identifies the user but does not give access to modify a protected resource.
+        So a sort of token is also returned in the authorization header that must be included in all subsequent requests to modify the user data.
+      operationId: doLogin
+      requestBody:
+        required: true
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/username'
+      responses:
+        "200":
+          description: The user is authorized/signed in. Returns uuid
+          content:
+            application/json:
+              schema:   
+                $ref: "#/components/schemas/ID"
+        '201':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:   
+                $ref: "#/components/schemas/ID"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [login]
+      operationId: logOut
+      summary: Sign out the user
+      description: |-
+        This signs out the user. The token will no longer be valid unless the user signs in again to obtain a new access token. 
+      responses:
+        "204": 
+           description: Successfully signed out.
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/private-profile:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [User]
+      operationId: getPrivate
+      summary: Whether or not the profile is private.
+      description: |-
+        See if the user profile is set to private or not.
+      responses:
+        "200":
+          description: True or false.
+          content:
+            application/json:
+              schema:   
+                $ref: "#/components/schemas/boolean"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    put:
+      tags: [User]
+      operationId: setPrivate
+      summary: Sets the user's profile to private.
+      description: |-
+        Sets the user's profile to private if not set already.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [User]
+      operationId: setPublic
+      summary: Sets the user's profile to public.
+      description: |-
+        Sets the user's profile to public if not set already.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [User]
+      operationId: getUserProfile
+      summary: Get an information of a user.
+      description: |-
+        Get these information about the given user:
+        user-id, profile-name, profile-message, gender, birth-date, profile-photo-id, array of post IDs that the user posted sorted according to last-post-first, post-count, follower-count, following-count.
+      responses:
+        "200":
+          description: user's information.
+          content:
+            application/json:
+              schema:   
+                $ref: "#/components/schemas/user"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    patch:
+      tags: [User]
+      operationId: updateUserProfile
+      summary: Update the user profile details.
+      description: |-
+        Update at least one of these: profile-name, profile-message, gender, birth-date.
+        If this leads to the creation of any of the fields on the user profile, 201 is returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:  
+              description: At least one property must be set.
+              type: object
+              properties:   
+                profile-name:
+                  $ref: '#/components/schemas/name'
+                profile-message:
+                  $ref: '#/components/schemas/message'
+                gender:
+                  $ref: '#/components/schemas/gender'
+                birth-date:
+                  $ref: '#/components/schemas/date'
+              minProperties: 1   
+              additionalProperties: false 
+      responses:
+        "201":  # --
+          description: Successfully created some fields that did not exist. Send back the possible modified fields.
+          content:
+            application/json:
+              schema:  
+                description: Schema structure for fields that are possible to modify.
+                type: object
+                properties:   
+                  profile-name:
+                    $ref: '#/components/schemas/name'
+                  profile-message:
+                    $ref: '#/components/schemas/message'
+                  gender:
+                    $ref: '#/components/schemas/gender'
+                  birth-date:
+                    $ref: '#/components/schemas/date'
+        "204":
+          $ref: '#/components/responses/NoContent204'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [User]
+      operationId: deleteUser
+      summary: Deletes the account of the user permanently.
+      description: |-
+        Deletes the user together with all its information.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/username:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    put:
+      tags: [User]
+      operationId: setMyUserName
+      summary: Modify user profile name.
+      description: |-
+        Replaces the user profile name to the specified name in the request body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:   
+              $ref: '#/components/schemas/username'
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/profile-picture:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [Photo]
+      operationId: getUserProfilePicture
+      summary: Get the user profile picture.
+      description: |-
+        Get the profile picture of the given user. The profile picture does not contain any like, comment, date-time posted, etc; no metadata attached.
+      responses:
+        "200":
+          description: user's profile picture.
+          content:
+            image/png:
+              schema:   
+                $ref: '#/components/schemas/photo'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    put:
+      tags: [Photo]
+      operationId: changeUserProfilePicture
+      summary: Replaces the user profile picture.
+      description: |-
+        Creates a new user profile picture if not already exists, else replaces it.
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema:   
+              $ref: '#/components/schemas/photo'
+      responses:
+        "201":  # --
+          description: Picture created successfully
+          content:
+            application/json:
+              schema:   
+                $ref: '#/components/schemas/ID'
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [Photo]
+      operationId: deleteUserProfilePicture
+      summary: Deletes the profile picture of the user.
+      description: |-
+        Deletes the profile picture of the user..
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /search-name-or-hashtag:
+    get:
+      tags: [Search]
+      operationId: search
+      summary: Searchs a user by his name or a post by its hashtag.
+      description: |-
+        This is a request to search for a user/post or users/posts with a name/hashtag
+      parameters:
+        - $ref: "#/components/parameters/searchByNameOrHashtag"
+      responses:
+        "200":
+          description: |-
+            This returns 2 arrays: one for user IDs and the other for post IDs. 
+            Note that users can have the same name because the name is not the identifier. 
+            Note also that there is no restriction for hashtags to be different from user names.
+
+            If the search term in the database corresponds to only usernames, then the first array will be filled with user IDs while the second will be empty. Same works if corresponds to only hashtags.
+            But if the search term in the database corresponds to both usernames and hashtags, then both arrays are filled: first array with user IDs and second array with post IDs.
+          content:
+            application/json:
+              schema:
+                description: "2 arrays: one for user IDs and the other for post IDs."
+                type: object
+                properties:
+                  userIDs:  
+                    $ref: '#/components/schemas/ids-array'
+                  postIDs:  
+                    $ref: '#/components/schemas/ids-array'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/follow:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [Follow]
+      operationId: getUserFollows
+      summary: Get the user IDs of the users whom the user follows or who follows the user.
+      description: |-
+        Returns an object which contains 2 arrays of user IDs; one for whom the user follows, and the other for who follows the user.
+      responses:
+        "200":
+          description: An object containing 2 arrays, one for the user's followers and the other for the user's followings.
+          content:
+            application/json:
+              schema:
+                description: "An object containing 2 arrays."
+                type: object
+                properties:
+                  followers-array:  
+                    $ref: '#/components/schemas/ids-array'
+                  followings-array:   
+                    $ref: '#/components/schemas/ids-array'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/follow/{follow-id}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/followID"
+    put:
+      tags: [Follow]
+      operationId: followUser
+      summary: A user follows another user.
+      description: |-
+        A user with the user-id follows another user with follow-id, provided that he didn't already.
+        When a user bans another user, the banned user cannot follow the other user. In this case a forbidden error is returned
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [Follow]
+      operationId: unfollowUser
+      summary: a user unfollows another user.
+      description: |-
+        A user with the user-id unfollows another user with follower-id.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/ban:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [Ban]
+      operationId: getBanUsers
+      summary: Get the user IDs of the users who were banned by the given user.
+      description: |-
+        Returns an array of user IDs of the users who were banned by the given user.
+      responses:
+        "200":
+          description: An array of user IDs.
+          content:
+            application/json:
+              schema:   
+                $ref: '#/components/schemas/ids-array'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/ban/{ban-user}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/banID"
+    put:
+      tags: [Ban]
+      operationId: banUser
+      summary: A user bans another user.
+      description: |-
+        A user with the \"user-id\" bans another user with \"ban-user\", provided that he didn't already.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  $ref: "#/components/responses/Forbidden403" #no forbidden error.
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [Ban]
+      operationId: unbanUser
+      summary: a user unbans another user.
+      description: |-
+        A user with the \"user-id\" unbans another user with \"ban-user\".
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  $ref: "#/components/responses/Forbidden403" #no forbidden error.
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /photos/{photo-id}:
+    parameters:
+      - $ref: "#/components/parameters/photoID"
+    get:
+      tags: [Photo]
+      operationId: getSinglePhoto
+      summary: Get the photo, given a photo ID.
+      description: |-
+        Given the photo ID, this sends the photo wihtout any metadata attached. All the metatdata such as the message attached to the photo, the likes and comments are part of the \"post\".
+        Use this to request the photo of a post.
+      responses:
+        '200':
+          description: Requested image
+          content:
+            image/png:
+              schema:   
+                $ref: '#/components/schemas/photo'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /posts/{post-id}:
+    parameters:
+      - $ref: "#/components/parameters/postID"
+    get:
+      tags: [Post]
+      #I prefer calling it getPost because I upload a photo with hashtags, captions, etc instead of just a photo. 
+      #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
+      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      operationId: getPhoto
+      summary: Get the post, given the post ID.
+      description: |-
+        Given the post ID, this sends the post with all its metadata attached. All the metatdata such as the message, the likes, comments, an ID to retrieve the photo, and the date and time posted, and the hashtags.
+      responses:
+        '200':
+          description: The requested post
+          content:
+            application/json:
+              schema:   
+                $ref: '#/components/schemas/post'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /posts/:
+    get:
+      tags: [Post]
+      operationId: getPhotos
+      summary: Get all posts of all users who did not set their profiles to private and did not ban the user.
+      description: |-
+        This returns a list of posts of users who did not set their profiles to private and did not ban the user. 
+        This is similar to \"explore\" in some Apps, where everyone can see posts that are public (or were not banned by the users who posted them). Then may want to follow users they did not follow already, like the posts, comment on them, etc. 
+        Note that this is different from the /users/{user-id}/posts/stream/ defined below 
+      responses:
+        '200':
+          description: Returns an array of posts. The fields are defined in the post section
+          content:
+            application/json:
+              schema: 
+                description: An array of posts
+                type: array
+                minItems: 0
+                maxItems: 1000
+                items:  
+                  $ref: '#/components/schemas/post'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/posts/stream/:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [Post]
+      operationId: getMyStream
+      summary: Get the list of posts posted by the given user's followings.
+      description: |-
+        Given a user ID, returns an array of posts posted by the given user's followings. This does not include what the user himself posts (read the requirement of the project to understand). What a post returns, is described in the post section.
+      responses:
+        '200':
+          description: An array of Requested posts of the user followings.
+          content:
+            application/json:
+              schema: 
+                description: An array of Posts of the user's followings.
+                type: array
+                minItems: 0
+                maxItems:  1000
+                items:  
+                  $ref: '#/components/schemas/post'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/posts/:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      tags: [Post]
+      #I prefer calling it getUserPosts because I get a photo with hashtags, captions, date and time posted, etc instead of just a photo. 
+      #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
+      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      operationId: getUserPhotos
+      summary: Get the list of posts posted by the given user.
+      description: |-
+        Given a user ID, returns an array of posts posted by the given user himself. What a post returns, is described in the post section.
+      responses:
+        '200':
+          description: Requested posts of the user.
+          content:
+            application/json:
+              schema: 
+                description: An array of posts of the given user.
+                type: array
+                minItems: 0
+                maxItems: 1000
+                items:  
+                  $ref: '#/components/schemas/post'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    post:
+      tags: [Post]
+      #I prefer calling it uploadPost because I upload a photo with hashtags, captions, etc instead of just a photo. 
+      #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
+      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      operationId: uploadPhoto
+      summary: Create a new Post by the given user and returns the newly created post ID.
+      description: |-
+        Create a new \"post\" with a photo that must be present and optionally a caption and an array of hashtags.
+        Caption and hashtags can even be added later on using another endpoint.
+        The server will create a new unique ID, the client can find it in the response.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: 
+              description: |-
+                An object containing 2 other objects (photo and caption) and an array of hashtags.
+              type: object
+              properties:
+                photo:  
+                  $ref: '#/components/schemas/photo'
+                caption:  
+                  $ref: '#/components/schemas/message'
+                hashtags:  
+                    $ref: '#/components/schemas/hashtags'
+              required:
+                - photo
+      responses:
+        "201":
+          description: Post created successfully
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ID' 
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/posts/{post-id}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/postID"
+    put:
+      tags: [Post]
+      operationId: modifyCaption
+      summary: Replaces the caption associated with the post with the new caption.
+      description: |-
+        Given a new caption, it replaces the old one with the new one.
+        Note that this method replaces only the caption and not the photo. 
+        The photo cannot be replaced unless the post is deleted and a new one with the intended photo is posted again.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:   
+              $ref: '#/components/schemas/message'
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500" 
+    delete:
+      tags: [Post]
+      operationId: deletePhoto  #I prefer deletePost
+      summary: Deletes the post including the photo, caption, likes and comments, date and time posted, etc.
+      description: |-
+        Deletes the post with the given post ID together with the photo, caption, likes and comments, etc.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /users/{user-id}/posts/{post-id}/hashtags/{hashtag}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/postID"
+      - $ref: '#/components/parameters/hashtag'
+    put:
+      tags: [Hashtag]
+      operationId: addHashtag
+      summary: Add a hashtag to a post.
+      description: |-
+        This adds a hashtag on a post.
+        Hashtag can be added to any post through this endpoint after the post has been posted, or by adding the hashtag directly when posting the posts.
+      responses:
+        "201":
+          description: Hashtag created successfully
+          content:
+            application/json:
+              schema:   
+                $ref: "#/components/schemas/hashtag"
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500" 
+    delete:
+      tags: [Hashtag]
+      operationId: deleteHashtag
+      summary: Deletes a hashtag on a given post.
+      description: |-
+        This simply deletes the specified hashtag.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        # "404":  
+        #   $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+####################################################################################################################
+  # /users/{user-id}/posts/{post-id}/hashtags/:
+  #   parameters:
+  #     - $ref: "#/components/parameters/userID"
+  #     - $ref: "#/components/parameters/postID"
+  #   put:
+  #     tags: [Hashtag]
+  #     operationId: addHashtags
+  #     summary: Add an array of hashtags to a post.
+  #     description: |-
+  #       This adds an array of hashtags to a post.
+  #       Hashtag can be added to any post through this endpoint after the post has been posted, or by adding the hashtag directly when posting the posts.
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               $ref: "#/components/schemas/hashtag"
+  #     responses:
+  #       "201":
+  #         description: Comment created successfully
+  #         content:
+  #           application/json:
+  #             schema:   
+  #               $ref: "#/components/schemas/hashtags"
+  #       "204":  
+  #         $ref: "#/components/responses/NoContent204"
+  #       "400":  
+  #         $ref: "#/components/responses/BadRequest400"
+  #       "401":  
+  #         $ref: "#/components/responses/UnAuth401"
+  #       "403":  
+  #         $ref: "#/components/responses/Forbidden403"
+  #       "404":  
+  #         $ref: "#/components/responses/NotFound404"
+  #       "500":  
+  #         $ref: "#/components/responses/InternalServerError500" 
+  #   delete:
+  #     tags: [Hashtag]
+  #     operationId: deleteHashtags
+  #     summary: Deletes an array of hashtag on a given post.
+  #     description: |-
+  #       This simply deletes the specified hashtags.
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               $ref: "#/components/schemas/hashtag"
+  #     responses:
+  #       "204":  
+  #         $ref: "#/components/responses/NoContent204"
+  #       "400":  
+  #         $ref: "#/components/responses/BadRequest400"
+  #       "401":  
+  #         $ref: "#/components/responses/UnAuth401"
+  #       "403":  
+  #         $ref: "#/components/responses/Forbidden403"
+  #       "404":  
+  #         $ref: "#/components/responses/NotFound404"
+  #       "500":  
+  #         $ref: "#/components/responses/InternalServerError500"
+####################################################################################################################
+
+  /posts/{post-id}/hashtags/:
+    parameters:
+      - $ref: "#/components/parameters/postID"
+    get:
+      tags: [Hashtag]
+      operationId: getPostHashtags
+      summary: An array of hashtags of a post.
+      description: |-
+        This returns an array of hashtags of a given post. That is, an array of strings.
+      responses:
+        "200":
+          description: Returns an array of hashtags of a given post
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/hashtags' 
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500" 
+
+  /posts/{post-id}/likes/:
+    parameters:
+      - $ref: "#/components/parameters/postID"
+    get:
+      tags: [Likes]
+      operationId: getLikes
+      summary: Get the like-count and the user IDs who liked the post.
+      description: |-
+        Returns the like-count and the user IDs who liked the post.
+        The user IDs are returned as an array to be used in another endpoint to get information about the users.
+      responses:
+        '200':
+          description: Returns in turn a composite object.
+          content:
+            application/json:
+              schema: 
+                description: Defines the schema of the returned composite object.
+                type: object
+                properties:
+                  like-count:   
+                    $ref: '#/components/schemas/count'
+                  user-ids: 
+                      $ref: '#/components/schemas/ids-array'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /posts/{post-id}/likes/{user-id}: 
+    parameters:
+      - $ref: "#/components/parameters/postID"
+      - $ref: "#/components/parameters/userID"
+    put:
+      tags: [Likes]
+      operationId: likePhoto
+      summary: Places a like on the post.
+      description: A given user likes a given post, provided that he didn't already.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500" 
+    delete:
+      tags: [Likes]
+      operationId: unlikePhoto
+      summary: Removes the like placed by a given user on a given post.
+      description: |-
+        removes the like of the user on a given post and returns \"204: No Content\".
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  /posts/{post-id}/comments/:
+    parameters:
+      - $ref: "#/components/parameters/postID"
+    get:
+      tags: [Comments]
+      operationId: getPhotoComments   #getPostComments
+      summary: Get all the comments of a given post.
+      description: |-
+        This returns the comments' metadata and the comments themselves. This includes the comments IDs, the users' IDs who made the comments, the post ID on which the comments were made, the date and time the comments were made, and the comment messages themselves.
+      responses:
+        '200':
+          description: An array of comments of a Requested post.
+          content:
+            application/json:
+              schema: 
+                description: An array of comments.
+                type: array
+                minItems: 0
+                maxItems: 1000
+                items:  
+                  $ref: '#/components/schemas/comment'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    post:   # prof panizzi
+      tags: [Comments]
+      operationId: commentPhoto # commentPost
+      summary: Places a new comment and returns the newly created comment ID.
+      description: |-
+        Posts a new \"comment\" on the given post ID by the given user.
+        The server will create a new unique ID, the client can find it in the response.
+      # parameters:     # no need because the user ID can be inferred from the token.
+      #   - name: user-id
+      #     in: query
+      #     required: true
+      #     schema:
+      #       $ref: "#/components/schemas/ID"
+      #     description: Th user ID that must be used in the query string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:   
+              $ref: '#/components/schemas/message'
+      responses:
+        "201":
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:   
+                $ref: '#/components/schemas/ID'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+
+  # /posts/{post-id}/comments/{user-id}:    # it's above
+  #   parameters:
+  #     - $ref: "#/components/parameters/postID"
+  #     - $ref: "#/components/parameters/userID"
+  #   post:
+  #     tags: [Comments]
+  #     operationId: commentPhoto #commentPost
+  #     summary: Places a new comment and returns the newly created comment ID.
+  #     description: |-
+  #       Posts a new \"comment\" on the given post ID by the given user.
+  #       The server will create a new unique ID, the client can find it in the response.
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:   
+  #             $ref: '#/components/schemas/message'
+  #     responses:
+  #       "201":
+  #         description: Comment created successfully
+  #         content:
+  #           application/json:
+  #             schema:   
+  #               $ref: '#/components/schemas/ID'
+  #       "400":  
+  #         $ref: "#/components/responses/BadRequest400"
+  #       "401":  
+  #         $ref: "#/components/responses/UnAuth401"
+  #       "403":  
+  #         $ref: "#/components/responses/Forbidden403"
+  #       "404":  
+  #         $ref: "#/components/responses/NotFound404"
+  #       "500":  
+  #         $ref: "#/components/responses/InternalServerError500"
+
+# endpoint mod
+  # /users/{user-id}/comments/{comment-id}:   # it's below.
+  #   parameters:
+  #     - $ref: "#/components/parameters/commentID"
+  #     - $ref: "#/components/parameters/userID"
+  #   delete:
+  #     tags: [Comments]
+  #     operationId: uncommentPhoto   #uncommentPost
+  #     summary: Deletes a given comment by the given user.
+  #     description: |-
+  #       Deletes a given comment by the given user. The user is either the one who placed the comment or on whose post the comment was placed.
+  #     responses:
+  #       "204":  
+  #         $ref: "#/components/responses/NoContent204"
+  #       "400":  
+  #         $ref: "#/components/responses/BadRequest400"
+  #       "401":  
+  #         $ref: "#/components/responses/UnAuth401"
+  #       "403":  
+  #         $ref: "#/components/responses/Forbidden403"
+  #       "404":  
+  #         $ref: "#/components/responses/NotFound404"
+  #       "500":  
+  #         $ref: "#/components/responses/InternalServerError500"
+
+  /comments/{comment-id}:
+    parameters:
+      - $ref: "#/components/parameters/commentID"
+    get:
+      tags: [Comments]
+      operationId: getComment
+      summary: Get a given comment.
+      description: |-
+        This returns the comment's metadata and the comment itself. This includes the comment ID, the user ID who made the comment, the post ID on which the comment was made, the date and time the comment was made, and the comment message itself.
+      responses:
+        '200':
+          description: The requested comment.
+          content:
+            application/json:
+              schema:   
+                $ref: '#/components/schemas/comment'
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        # "403":  
+        #   $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
+    delete:
+      tags: [Comments]
+      operationId: uncommentPhoto   #uncommentPost
+      summary: Deletes a given comment by the user inferred from the token.
+      description: |-
+        Deletes a given comment by the given user. The user is either the one who placed the comment or on whose post the comment was placed.
+      responses:
+        "204":  
+          $ref: "#/components/responses/NoContent204"
+        "400":  
+          $ref: "#/components/responses/BadRequest400"
+        "401":  
+          $ref: "#/components/responses/UnAuth401"
+        "403":  
+          $ref: "#/components/responses/Forbidden403"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
+        "500":  
+          $ref: "#/components/responses/InternalServerError500"
