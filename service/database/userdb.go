@@ -4,9 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"os"
+	"time"
+	"net/http"
+	"io"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/gofrs/uuid"
-	"time"
 )
 
 // var (
@@ -69,7 +74,6 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 
 	rows, err := db.c.Query(sqlGetAllUsers, userid)
 	if err != nil {
-		fmt.Println(err)
         return nil, err
     }
 	users := []structs.User{}
@@ -86,7 +90,6 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 		err = db.c.QueryRow(sqlPost, user.ID).Scan(&user.PostCount)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				fmt.Println(err)
            		return nil, err
 			}
 		}
@@ -94,7 +97,6 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 		err = db.c.QueryRow(sqlfollowing, user.ID).Scan(&user.FollowingCount)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				fmt.Println(err)
            		return nil, err
 			}
 		}
@@ -102,13 +104,11 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 		err = db.c.QueryRow(sqlfollower, user.ID).Scan(&user.FollowerCount)
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
-				fmt.Println(err)
            		return nil, err
 			}
 		}
 		postids, err := getPostIds(user.ID, db.c)
 		if err != nil {
-            fmt.Println(err)
 			return nil, err
 		}
 		user.PostIDs = postids
@@ -116,7 +116,6 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -127,7 +126,6 @@ func getPostIds(user string, db *sql.DB) ( []string, error ) {
 	sqlPostIds := `SELECT id FROM post WHERE userid = ?`
 	rows, err := db.Query(sqlPostIds, user)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	var postids []string
@@ -137,14 +135,12 @@ func getPostIds(user string, db *sql.DB) ( []string, error ) {
 		postid := ""
 		err = rows.Scan(&postid)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		postids = append(postids, postid)
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -165,7 +161,6 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
-        fmt.Println("tx init: ", err)
 		return "", "", "", err
 	}
 	
@@ -192,28 +187,29 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 		}
 
 		if err = tx.Commit(); err != nil {
-			fmt.Printf("Wow, it has reached here4 duplicate: %s\n", newtoken)
 			return "", "", "", err
+
 		}
-		fmt.Printf("Wow, it has reached here1: %s\n", newtoken)
 		return newid, newtoken, "201", nil
 
 	} else if err != nil {
-		fmt.Printf("Wow, it has reached here2: %s\n", newtoken)
 		return "", "", "", err
 	}
 
-    _, err = tx.Exec("INSERT OR REPLACE INTO session (id, userid) VALUES (?, ?);", newtoken, user1)
+	sqlLogin := `INSERT OR REPLACE INTO session (id, userid) VALUES (?, ?)
+				WHERE NOT EXISTS (SELECT * FROM session WHERE userid = ?);`
+
+    _, err = tx.Exec(sqlLogin, newtoken, user1, user1)
 	if err != nil {
-		fmt.Printf("Wow, it has reached here3: %s\n", newtoken)
 		return "", "", "", err
+
 	}
 
 	if err = tx.Commit(); err != nil {
-		fmt.Printf("Wow, it has reached here4: %s\n", newtoken)
 		return "", "", "", err
+
 	}
-	fmt.Printf("Wow, finally: %s\n", newtoken)
+
 	return user1, newtoken, "200", nil
 }
 
@@ -336,7 +332,6 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 	err = db.c.QueryRow(sqlPost, user.ID).Scan(&user.PostCount)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			fmt.Println(err)
 			return nil, err
 		}
 	}
@@ -344,7 +339,6 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 	err = db.c.QueryRow(sqlfollowing, user.ID).Scan(&user.FollowingCount)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			fmt.Println(err)
 			return nil, err
 		}
 	}
@@ -352,13 +346,11 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 	err = db.c.QueryRow(sqlfollower, user.ID).Scan(&user.FollowerCount)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			fmt.Println(err)
 			return nil, err
 		}
 	}
 	postids, err := getPostIds(user.ID, db.c)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	user.PostIDs = postids
@@ -381,7 +373,6 @@ func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.Profile
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
-        fmt.Println("tx init: ", err)
 		return "", err
 	}
 	defer tx.Rollback()
@@ -400,7 +391,6 @@ func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.Profile
 			err = tx.QueryRow(sqlCheck, userID).Scan(&str)
 			if err != nil {
 				if !errors.Is(err, sql.ErrNoRows) {
-					fmt.Println(err)
 					return "", err
 				}
 				// valCreated = "201"
@@ -413,7 +403,6 @@ func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.Profile
 			sqlUpdateUser := fmt.Sprintf("UPDATE user SET %s = ? WHERE id = ?", arr2[idx])
 			_, err = tx.Exec(sqlUpdateUser, elem, userID)
 			if err != nil {
-				fmt.Println(err)
 				return "", err
 			}
 		}
@@ -431,17 +420,70 @@ func (db *appdbimpl) DeleteUser(userID, token string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
 		return structs.UnAuthErr
+
 	} else if err != nil {
 		return err
 	}
+
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
 		return structs.ForbiddenErr
 	}
-	// Cascade delete -> deletes any row in any table that has reference to the user.
-	_, err = db.c.Exec(`DELETE FROM user WHERE id = ? ;`, userID)
-	return err
+
+	// atomic transaction
+	tx, err := db.c.Begin()
+	if err != nil {
+		return err
+
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.Query("SELECT photoid FROM post WHERE userid = ?", userid)
+	if err != nil {
+        return err
+
+    }
+	defer rows.Close()
+
+	// For each photo of the user to be deleted, delete it from disk
+	for rows.Next() {
+
+		var photoID string
+        err = rows.Scan(&photoID)
+        if err != nil {
+            return err
+
+        }
+
+		file := filepath.Join("./pictures", photoID + ".png")
+
+		err = os.Remove(file)
+		if err != nil {
+			return err
+
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+        return err
+	}
+
+	// Cascade delete -> deletes any row in any table that has reference to the user in the database.
+	_, err = tx.Exec(`DELETE FROM user WHERE id = ? ;`, userID)
+	if err != nil {
+        return err
+
+	}
+
+	err = tx.Commit()
+    if err != nil {
+        return err
+
+	}
+	
+	return nil
 }
+
 
 func (db *appdbimpl) SetMyUserName(userID, token string, username string) error {
 
@@ -491,8 +533,8 @@ func (db *appdbimpl) GetUserProfilePicture(userID, token string) ( string, error
 	return pid, nil
 }
 
-// The returned uuid is the photo ID to be changed in directory if exists. "204" if exists, else "201"
-func (db *appdbimpl) ChangeUserProfilePicture(userID, token string) ( string, string, error) {
+// The returned uuid is the photo ID to be sent. "204" if exists, else "201"
+func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Request) ( string, string, error) {
 
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -504,63 +546,167 @@ func (db *appdbimpl) ChangeUserProfilePicture(userID, token string) ( string, st
 	if userid != userID {
 		return "", "", structs.ForbiddenErr
 	}
+
+	tx, err := db.c.Begin()
+	if err != nil {
+        return "", "", err
+    }
+	defer tx.Rollback()
+
+
 	pid := ""
-	err = db.c.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&pid);
+	err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&pid);
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return "", "", err
 		}
 	}
+
 	if pid != "" {
+
+		err = updateProfPic(pid, r)
+		if err != nil {
+            return "", "", err
+        }
+
 		return pid, "204", nil
 	}
+
 	uid, err := uuid.NewV4()
 	if err != nil {
         return "", "", err
 	}
-	_, err = db.c.Exec("UPDATE user SET profilephotoid = ? WHERE id = ?", uid.String(), userid)
+	_, err = tx.Exec("UPDATE user SET profilephotoid = ? WHERE id = ?", uid.String(), userid)
 	if err != nil {
         return "", "", err
+
 	}
+
+	err = updateProfPic(uid.String(), r)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = tx.Commit()
+    if err != nil {
+		return "", "", err
+
+	}
+
 	return uid.String(), "201", nil
 }
 
-// Returns the photo id to be deleted from disk.
-func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) ( string, error ) {
+func updateProfPic(photoID string, r *http.Request) error {
+	
+	// Form contains the parsed form data, including both the URL field's query parameters and 
+	// the PATCH, POST, or PUT form data. This field is only available after ParseForm is called.
+	// But ParseMultipartForm automatically calls ParseForm
+
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+        return err
+
+	}
+
+	// (multipart.File, *multipart.FileHeader, error)
+	// FormFile returns the first file for the provided form key. 
+	// FormFile calls ParseMultipartForm and ParseForm if necessary.
+	// _ for getting the filenames, extensions, etc.
+	photo_file, _, err := r.FormFile("photo")
+	if err != nil {
+        return err
+
+	}
+
+	file := filepath.Join("./pictures", photoID + ".png")
+
+	// Create creates or truncates the named file. If the file already exists, it is truncated. 
+	// If the file does not exist, it is created with mode 0666 (before umask). 
+	// If successful, methods on the returned File can be used for I/O; the associated file descriptor has mode O_RDWR. 
+	// If there is an error, it will be of type *PathError.
+
+	img, err := os.Create(file)
+
+	if err != nil {
+        return err
+
+	}
+
+	defer img.Close()
+
+
+	// Copy copies from src to dst until either EOF is reached on src or an error occurs. 
+	// It returns the number of bytes copied and the first error encountered while copying, if any.
+
+	// A successful Copy returns err == nil, not err == EOF. 
+	// Because Copy is defined to read from src until EOF, it does not treat an EOF from Read as an error to be reported.
+
+	_, err = io.Copy(img, photo_file)
+
+	if err != nil {
+        return err
+
+	}
+
+	return nil
+}
+
+
+func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
 
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return structs.UnAuthErr
 
 	} else if err != nil {
-		return "", err
+		return err
 
 	}
+	
 	if userID != userid {
-		return "", structs.ForbiddenErr
+		return structs.ForbiddenErr
 
 	}
 
+	tx, err := db.c.Begin()
+	if err != nil {
+        return err
+    }
 
-	// Return the photo id to be deleted from disk
+	defer tx.Rollback()
+
 	var photoID string
-	err = db.c.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&photoID)
+	err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&photoID)
 
 	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-       	 	return "", err
-		}
+		// if !errors.Is(err, sql.ErrNoRows) {
+       	//  	return err
+		// }
+
+		return err
+    }
+
+	file := filepath.Join("./pictures", photoID + ".png")
+
+	err = os.Remove(file)
+    if err != nil {
+        return err
+
     }
 
 
-	_, err = db.c.Exec("UPDATE user SET profilephotoid = '' WHERE id = ?", userid)
+	_, err = tx.Exec("UPDATE user SET profilephotoid = '' WHERE id = ?", userid)
 	if err != nil {
-        return "", err
+        return err
 
 	}
 
-	// nil means, it is removed from the database and must be subsequently removed from disk as well.
-	return photoID, nil
+	if err = tx.Commit(); err != nil {
+		return err
+
+	}
+
+	return nil
 }
 
 
@@ -602,7 +748,6 @@ func (db *appdbimpl) Search(token string, search string) ( []string, []string , 
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, nil, err
 	}
 
@@ -623,7 +768,6 @@ func (db *appdbimpl) Search(token string, search string) ( []string, []string , 
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, nil,  err
 	}
 
@@ -676,7 +820,6 @@ func (db *appdbimpl) GetUserFollows(userID, token string) ( []string, []string ,
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, nil, err
 	}
 
@@ -696,7 +839,6 @@ func (db *appdbimpl) GetUserFollows(userID, token string) ( []string, []string ,
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, nil, err
 	}
 
@@ -712,6 +854,7 @@ func (db *appdbimpl) FollowUser(userID, followID, token string) error {
 	} else if err != nil {
 		return err
 	}
+
 	if userID != userid {
 		return structs.ForbiddenErr
 	}
@@ -790,7 +933,6 @@ func (db *appdbimpl) GetBanUsers(userID, token string) ( []string, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -806,9 +948,11 @@ func (db *appdbimpl) BanUser(userID, banID, token string) error {
 	} else if err != nil {
 		return err
 	}
+
 	if userID != userid {
 		return structs.ForbiddenErr
 	}
+
 	if userID == banID {
 		return structs.ForbiddenErr //errors.New("You cannot ban yourself")
 	}
@@ -978,7 +1122,6 @@ func getHashtags ( postID string, db *sql.DB) ( []string, error ) {
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -1051,7 +1194,6 @@ func (db *appdbimpl) GetPhotos( token string ) ( []structs.Post, error ) {
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 	
@@ -1118,7 +1260,6 @@ func (db *appdbimpl) GetMyStream(userID, token string ) ( []structs.Post, error 
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 	
@@ -1191,34 +1332,34 @@ func (db *appdbimpl) GetUserPhotos(userID, token string ) ( []structs.Post, erro
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 	
 	return posts, nil
 }
 
-func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags []string ) ( string, string, error ) {
+func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags []string, r *http.Request ) ( string, error ) {
 
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", "", structs.UnAuthErr
+		return "", structs.UnAuthErr
 	} else if err != nil {
-		return "", "", err
+		return "", err
 	}
+	
 	if userid != userID {
-		return "", "", structs.ForbiddenErr
+		return "", structs.ForbiddenErr
 	}
 
 	uid, err := uuid.NewV4()
 	if err != nil {
-        return "", "", err
+        return "", err
     }
 	photoID := uid.String()
 
 	uid, err = uuid.NewV4()
 	if err != nil {
-        return "", "", err
+        return "", err
     }
 	postID := uid.String()
 
@@ -1232,29 +1373,35 @@ func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
-        fmt.Println("tx init: ", err)
-		return "", "", err
+		return "", err
 	}
 	defer tx.Rollback()
 
 	_, err = tx.Exec(sqlUploadPhoto, postID, photoID, userID, caption, datetime)
 	if err != nil {
-        return "", "", err
+        return "", err
     }
 
 	for _, hashtag := range hashtags {
 		_, err = tx.Exec("INSERT INTO hashtag (hashtag, postid) VALUES (?,?);", postID, hashtag)
         if err != nil {
-            return "", "", err
+            return "", err
         }
 	}
 
+	err = updateProfPic(postID, r)
+	if err != nil {
+        return "", err
+
+    }
+
 	if err = tx.Commit(); err != nil {
-		return "", "", err
+		return "", err
 	}
 	
-	return postID, photoID, nil
+	return postID, nil
 }
+
 
 func (db *appdbimpl) ModifyCaption( userID, token, postID, caption string ) error {
 
@@ -1268,40 +1415,41 @@ func (db *appdbimpl) ModifyCaption( userID, token, postID, caption string ) erro
 		return structs.ForbiddenErr
 	}
 	_, err = db.c.Exec("UPDATE post SET caption = ? WHERE id = ?", caption, postID)
-	fmt.Println(err)
 	return err
 }
 
 // Deletes a post with the given post ID together with the photo, caption, likes and comments, etc.
-func (db *appdbimpl) DeletePhoto( userID, token, postID string) ( string, error ) {
+func (db *appdbimpl) DeletePhoto( userID, token, postID string) error {
 
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return structs.UnAuthErr
 	} else if err != nil {
-		return "", err
+		return err
 	}
+
 	if userid != userID {
-		return "", structs.ForbiddenErr
+		return structs.ForbiddenErr
 	}
 
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
-        fmt.Println("tx init: ", err)
-		return "", err
+		return err
 	}
 	
 	defer tx.Rollback()
 
-	// Return the photo id to be deleted from disk
+	// The photo id to be deleted from disk
 	var photoID string
 	err = tx.QueryRow("SELECT photoid FROM post WHERE post.id = ?", postID).Scan(&photoID)
 
 	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-       	 	return "", err
-		}
+		// if !errors.Is(err, sql.ErrNoRows) {
+       	//  	return err
+		// }
+
+		return err
     }
 
 
@@ -1317,16 +1465,23 @@ func (db *appdbimpl) DeletePhoto( userID, token, postID string) ( string, error 
 	sqlDeleteP := `DELETE FROM post WHERE post.id = ?;`
 	_, err = tx.Exec(sqlDeleteP, postID)
 	if err != nil {
-		fmt.Println(err)
-		return "", err
+		return err
 	}
+
+	file := filepath.Join("./pictures", photoID + ".png")
+
+	err = os.Remove(file)
+    if err != nil {
+        return err
+
+    }
 
 	// Commit the transaction.
     if err = tx.Commit(); err != nil {
-        return "", err
+        return err
     }
 
-	return photoID, nil
+	return nil
 }
 
 // Return "204" if hashtag already exists, else "201".
@@ -1452,7 +1607,6 @@ func (db *appdbimpl) GetPostHashtags( token, postID string ) ( []string, error )
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -1506,7 +1660,6 @@ func (db *appdbimpl) GetLikes( token, postID string ) ( *structs.Like, error ) {
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 
@@ -1636,7 +1789,6 @@ func (db *appdbimpl) GetPhotoComments( token, postID string ) ( []structs.Commen
 	}
 
 	if err = rows.Err(); err != nil {
-		fmt.Println(err)
         return nil, err
 	}
 

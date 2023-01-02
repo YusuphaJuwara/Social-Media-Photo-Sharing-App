@@ -3,10 +3,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"io"
+	_"io"
 	"net/http"
-	"os"
-	"path/filepath"
+	_"os"
+	_"path/filepath"
 
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
@@ -323,13 +323,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// FormFile returns the first file for the provided form key. 
 	// FormFile calls ParseMultipartForm and ParseForm if necessary.
 	// _ for getting the filenames, extensions, etc.
-	photo_file, _, err := r.FormFile("photo")
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Error getting file from form")
-        w.WriteHeader(http.StatusBadRequest)
-        return
+	// photo_file, _, err := r.FormFile("photo")
+	// if err != nil {
+	// 	ctx.Logger.WithError(err).Error("Error getting file from form")
+    //     w.WriteHeader(http.StatusBadRequest)
+    //     return
+	// }
 
-	}
 	caption 	:= r.FormValue("caption")
 
 	// r.Form returns values like map[string][]string.
@@ -371,7 +371,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 
-	postID, photoID, err := rt.db.UploadPhoto(userID, token, caption, hashtags)
+	postID, err := rt.db.UploadPhoto(userID, token, caption, hashtags, r)
 
 	if errors.Is(err, structs.UnAuthErr ) {
 
@@ -398,23 +398,23 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	}
 
-	file := filepath.Join("./pictures", photoID + ".png")
+	// file := filepath.Join("./pictures", photoID + ".png")
 
 	// Create creates or truncates the named file. If the file already exists, it is truncated. 
 	// If the file does not exist, it is created with mode 0666 (before umask). 
 	// If successful, methods on the returned File can be used for I/O; the associated file descriptor has mode O_RDWR. 
 	// If there is an error, it will be of type *PathError.
 
-	img, err := os.Create(file)
+	// img, err := os.Create(file)
 
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Error creating file")
-        w.WriteHeader(http.StatusInternalServerError)
-        return
+	// if err != nil {
+	// 	ctx.Logger.WithError(err).Error("Error creating file")
+    //     w.WriteHeader(http.StatusInternalServerError)
+    //     return
 
-	}
+	// }
 
-	defer img.Close()
+	// defer img.Close()
 
 
 	// Copy copies from src to dst until either EOF is reached on src or an error occurs. 
@@ -423,14 +423,14 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// A successful Copy returns err == nil, not err == EOF. 
 	// Because Copy is defined to read from src until EOF, it does not treat an EOF from Read as an error to be reported.
 
-	_, err = io.Copy(img, photo_file)
+	// _, err = io.Copy(img, photo_file)
 
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Error copying file")
-        w.WriteHeader(http.StatusInternalServerError)
-        return
+	// if err != nil {
+	// 	ctx.Logger.WithError(err).Error("Error copying file")
+    //     w.WriteHeader(http.StatusInternalServerError)
+    //     return
 
-	}
+	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -563,7 +563,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 
-	photoID, err := rt.db.DeletePhoto(userID, token, postID)
+	err = rt.db.DeletePhoto(userID, token, postID)
 
 	if errors.Is(err, structs.UnAuthErr ) {
 
@@ -590,15 +590,15 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	}
 	
-	file := filepath.Join("./pictures", photoID + ".png")
+	// file := filepath.Join("./pictures", photoID + ".png")
 
-	err = os.Remove(file)
-    if err != nil {
-		ctx.Logger.WithError(err).Error("Error removing file")
-		w.WriteHeader(http.StatusInternalServerError)
-        return
+	// err = os.Remove(file)
+    // if err != nil {
+	// 	ctx.Logger.WithError(err).Error("Error removing file")
+	// 	w.WriteHeader(http.StatusInternalServerError)
+    //     return
 
-    }
+    // }
 
 	w.WriteHeader(http.StatusNoContent)
 }

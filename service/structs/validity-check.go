@@ -13,7 +13,10 @@ func TokenCheck( r *http.Request) (string, error) {
 
 	// If the header doesn't contain Authorization, it returns an empty string ""
 	authHeader := r.Header.Get("Authorization")
-	reqToken := strings.TrimPrefix(authHeader, prefix)
+	reqToken := strings.TrimPrefix(authHeader, "\"")
+	reqToken = strings.TrimPrefix(reqToken, prefix)
+	reqToken = strings.TrimSuffix(reqToken, "\"")
+
 
 	// If the authHeader does not contain "Bearer ", then reqToken will be equal to authHeader ("Bearer " won't be trimmed off)
 	// if authHeader == "" || reqToken == authHeader {
@@ -22,7 +25,9 @@ func TokenCheck( r *http.Request) (string, error) {
 
 	fmt.Printf("Token is correct: %v\n", reqToken)
 	err := UuidCheck(reqToken)
+	
 	if err == nil{
+		fmt.Println("uuid check err == nil:", err)
 		return reqToken, nil
 
 	} else if errors.Is(err, BadReqErr) {

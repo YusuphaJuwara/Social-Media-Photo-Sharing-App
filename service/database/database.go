@@ -35,6 +35,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
+	"net/http"
 )
 
 // AppDatabase is the high level interface for the DB
@@ -74,9 +75,9 @@ type AppDatabase interface {
 	GetUserProfilePicture(userID, token string) ( string, error )
 
 	// The returned uuid is the photo ID to be changed in directory if exists, else nil.
-	ChangeUserProfilePicture(userID, token string) ( string, string, error)
+	ChangeUserProfilePicture(userID, token string, r *http.Request) ( string, string, error)
 
-	DeleteUserProfilePicture(userID, token string) ( string, error )
+	DeleteUserProfilePicture(userID, token string) error
 
 	// First slice with user IDs and second slice with post IDs that corresponds to the search term.
 	Search(token string, search string) ( []string, []string , error)
@@ -114,12 +115,12 @@ type AppDatabase interface {
 	// Get the list of posts posted by the given user.
 	GetUserPhotos(userID, token string ) ( []structs.Post, error )
 
-	UploadPhoto( userID, token string, caption string, hashtags []string ) ( string, string, error )
+	UploadPhoto( userID, token string, caption string, hashtags []string, r *http.Request ) ( string, error )
 
 	ModifyCaption( userID, token, postID, caption string ) error
 
 	// Deletes the post with the given post ID together with the photo, caption, likes and comments, etc.
-	DeletePhoto( userID, token, postID string) ( string, error )
+	DeletePhoto( userID, token, postID string)  error
 
 	// Return "204" if hashtag already exists, else "201".
 	AddHashtag( userID, token, postID string, hashtag string ) ( string, error )
