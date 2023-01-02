@@ -196,10 +196,23 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 		return "", "", "", err
 	}
 
-	sqlLogin := `INSERT OR REPLACE INTO session (id, userid) VALUES (?, ?)
-				WHERE NOT EXISTS (SELECT * FROM session WHERE userid = ?);`
+	var id string
+	err = tx.QueryRow("SELECT id FROM session WHERE userid = ?", user1).Scan(&id)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+        	return "", "", "", err
+		}
+    }
 
-    _, err = tx.Exec(sqlLogin, newtoken, user1, user1)
+	if id != "" {
+		return user1, id, "200", nil
+
+	}
+
+	sqlLogin := `INSERT INTO session (id, userid) VALUES (?, ?)`
+	// WHERE NOT EXISTS (SELECT * FROM session WHERE userid = ?);`
+
+    _, err = tx.Exec(sqlLogin, newtoken, user1)
 	if err != nil {
 		return "", "", "", err
 

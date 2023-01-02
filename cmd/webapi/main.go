@@ -50,7 +50,7 @@ const (
 		Debug 			bool 			= true
 
 		// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-		DB 				string 			= "file:./wasa2.db?_foreign_keys=on"
+		DB 				string 			= "file:./wasa.db?_foreign_keys=on"
 
 )
 

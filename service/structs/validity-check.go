@@ -2,7 +2,7 @@ package structs
 
 import (
 	"errors"
-	"fmt"
+	_"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -23,11 +23,9 @@ func TokenCheck( r *http.Request) (string, error) {
 	// 	return nil, BadReqErr
 	// }
 
-	fmt.Printf("Token is correct: %v\n", reqToken)
 	err := UuidCheck(reqToken)
 	
 	if err == nil{
-		fmt.Println("uuid check err == nil:", err)
 		return reqToken, nil
 
 	} else if errors.Is(err, BadReqErr) {
@@ -40,6 +38,11 @@ func TokenCheck( r *http.Request) (string, error) {
 }
 
 func UuidCheck(uid string) error {
+
+
+	uid = strings.TrimPrefix(uid, "\"")
+	uid = strings.TrimSuffix(uid, "\"")
+
 
 	pattern := "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
@@ -57,6 +60,9 @@ func UuidCheck(uid string) error {
 
 func GenderCheck(str string) error {
 
+	str = strings.TrimPrefix(str, "\"")
+	str = strings.TrimSuffix(str, "\"")
+
 	if str == "Female" || str == "Male" {
 		return nil
 	}
@@ -65,6 +71,9 @@ func GenderCheck(str string) error {
 }
 
 func PatternCheck(pattern, name string, min, max int) error {
+
+	name = strings.TrimPrefix(name, "\"")
+	name = strings.TrimSuffix(name, "\"")
 
 	match, err := regexp.MatchString(pattern, name)
 	if err != nil {
@@ -79,6 +88,9 @@ func PatternCheck(pattern, name string, min, max int) error {
 }
 
 func DateTimeCheck(pattern, date string) error {
+
+	date = strings.TrimPrefix(date, "\"")
+	date = strings.TrimSuffix(date, "\"")
 
 	match, err := regexp.MatchString(pattern, date)
 	if err != nil {

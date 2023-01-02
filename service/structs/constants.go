@@ -94,7 +94,7 @@ const (
 
 
 	// '^(?=.*?[a-zA-Z])[a-zA-Z0-9]{8,20}$' # at least one alphabet and 7 or more other alphanumeric characters. 8-20
-	UsernamePattern 			=		"^\"[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*\"$"
+	UsernamePattern 			=		"^[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*$"
 	UsernameMinLen 				= 		8
 	UsernameMaxLen 				= 		20
 
