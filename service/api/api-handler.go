@@ -11,7 +11,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
 	rt.router.DELETE("/session", rt.wrap(rt.logOut))
 	rt.router.GET("/users/:user-id/private-profile", rt.wrap(rt.getPrivate))
-	rt.router.POST("/users/:user-id/private-profile", rt.wrap(rt.setPrivate))
+	rt.router.PUT("/users/:user-id/private-profile", rt.wrap(rt.setPrivate))
 	rt.router.DELETE("/users/:user-id/private-profile", rt.wrap(rt.setPublic))
 	rt.router.GET("/users/:user-id", rt.wrap(rt.getUserProfile))
 	rt.router.PATCH("/users/:user-id", rt.wrap(rt.updateUserProfile))
@@ -26,7 +26,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/users/:user-id/follow/:follow-id", rt.wrap(rt.unfollowUser))
 	rt.router.GET("/users/:user-id/ban", rt.wrap(rt.getBanUsers))
 	rt.router.PUT("/users/:user-id/ban/:ban-user", rt.wrap(rt.banUser))
-	rt.router.DELETE("/users/:user-id/ban", rt.wrap(rt.unbanUser))
+	rt.router.DELETE("/users/:user-id/ban/:ban-user", rt.wrap(rt.unbanUser))
 	rt.router.GET("/photos/:photo-id", rt.wrap(rt.getSinglePhoto))
 	rt.router.GET("/posts/:post-id", rt.wrap(rt.getPhoto))
 	rt.router.GET("/posts/", rt.wrap(rt.getPhotos))
@@ -46,7 +46,6 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/comments/:comment-id", rt.wrap(rt.getComment))
 	rt.router.DELETE("/comments/:comment-id", rt.wrap(rt.uncommentPhoto))
 
-	
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
 

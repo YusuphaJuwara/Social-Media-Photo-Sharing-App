@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func TokenCheck( r *http.Request) (string, error) {
@@ -17,32 +18,25 @@ func TokenCheck( r *http.Request) (string, error) {
 	reqToken = strings.TrimPrefix(reqToken, prefix)
 	reqToken = strings.TrimSuffix(reqToken, "\"")
 
-
 	// If the authHeader does not contain "Bearer ", then reqToken will be equal to authHeader ("Bearer " won't be trimmed off)
 	// if authHeader == "" || reqToken == authHeader {
-	// 	return nil, BadReqErr
+	// 	return nil, ErrBadReq
 	// }
 
 	err := UuidCheck(reqToken)
 	
 	if err == nil{
 		return reqToken, nil
-
-	} else if errors.Is(err, BadReqErr) {
-		return "", BadReqErr
-
+	} else if errors.Is(err, ErrBadReq) {
+		return "", ErrBadReq
 	}
 
 	return "", err
-
 }
 
 func UuidCheck(uid string) error {
-
-
 	uid = strings.TrimPrefix(uid, "\"")
 	uid = strings.TrimSuffix(uid, "\"")
-
 
 	pattern := "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
@@ -50,16 +44,14 @@ func UuidCheck(uid string) error {
 	if err != nil {
 		return err
 	}
-
 	if len(uid) != 36 || !match {
-		return BadReqErr
+		return ErrBadReq
 	}
 
 	return nil
 }
 
 func GenderCheck(str string) error {
-
 	str = strings.TrimPrefix(str, "\"")
 	str = strings.TrimSuffix(str, "\"")
 
@@ -71,7 +63,6 @@ func GenderCheck(str string) error {
 }
 
 func PatternCheck(pattern, name string, min, max int) error {
-
 	name = strings.TrimPrefix(name, "\"")
 	name = strings.TrimSuffix(name, "\"")
 
@@ -79,26 +70,31 @@ func PatternCheck(pattern, name string, min, max int) error {
 	if err != nil {
 		return err
 	}
-
 	if len(name) < min || len(name) > max || !match {
-		return BadReqErr
+		return ErrBadReq
 	}
 
 	return nil
 }
 
 func DateTimeCheck(pattern, date string) error {
-
 	date = strings.TrimPrefix(date, "\"")
 	date = strings.TrimSuffix(date, "\"")
 
 	match, err := regexp.MatchString(pattern, date)
 	if err != nil {
 		return err
-
 	} else if !match {
-		return BadReqErr
+		return ErrBadReq
+	}
 
+	datetimelayout 	:= "2006-01-02T15:04:05.000Z"
+	datelayout 		:= "2006-01-02"
+	_, err1 := time.Parse(datetimelayout, date)
+	_, err2 := time.Parse(datelayout, date)
+
+	if err1 != nil && err2 != nil {
+        return err1
 	}
 
 	return nil

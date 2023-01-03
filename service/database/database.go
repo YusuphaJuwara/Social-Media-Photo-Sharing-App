@@ -41,10 +41,9 @@ import (
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 
-	/*
-	For each user in our database, this gets it's information. 
-    But the user trying to get users' info cannot get those users who banned him or those whom he did not "follow" and set their profiles to private.
-	*/
+	// For each user in our database, this gets it's information. 
+    // But the user trying to get users' info cannot get those users who banned him or those 
+	// whom he did not "follow" and set their profiles to private.
 	GetAllUsers(token string) ( []structs.User, error )
 
 	// Logs in the user and returns the user ID, and the newly created token. In addition:
@@ -132,14 +131,12 @@ type AppDatabase interface {
 
 	// DeleteHashtags( userID, token, postID string, hashtags []string ) error
 
-
 	GetPostHashtags( token, postID string ) ( []string, error )
 
 	// Get the like-count and the user IDs who liked the post.
 	GetLikes( token, postID string ) ( *structs.Like, error )
 
 	LikePhoto( userID, token, postID string ) error
-
 
 	UnlikePhoto( userID, token, postID string ) error
 

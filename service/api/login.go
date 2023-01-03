@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
@@ -19,9 +18,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	// Check the validity of the username
 	err := structs.PatternCheck(structs.UsernamePattern, username, structs.UsernameMinLen, structs.UsernameMaxLen)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
-		fmt.Printf("Username: %v\nr.Form: %v", username, r.Form)
 		ctx.Logger.WithError(err).Error("Bad Request Error for the username format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -53,44 +51,34 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	} else if valCreated == "200" {
 		w.WriteHeader(http.StatusOK)
 	}
-
 	_ = json.NewEncoder(w).Encode(ID)
-
 }
 
 func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
-
+	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
         return 
-
 	} else if err != nil {
-
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
         return 
-
 	}
 
 	err = rt.db.LogOut(token)
 
-	if errors.Is(err, structs.NotFoundErr) {
-
-		ctx.Logger.WithError(err).Error("Token not found")
-		w.WriteHeader(http.StatusNotFound)
-        return 
-
-	} else if err != nil {
-
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	ctx.Logger.WithError(err).Error("Token not found")
+	// 	w.WriteHeader(http.StatusNotFound)
+    //     return 
+	// } else 
+	if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
         return 
-
 	}
-
 	w.WriteHeader(http.StatusNoContent)
 }
 

@@ -15,7 +15,7 @@ import (
 func (rt *_router) search(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -36,7 +36,7 @@ func (rt *_router) search(w http.ResponseWriter, r *http.Request, ps httprouter.
 	err2 := structs.PatternCheck(structs.HashtagPattern, name_or_hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 
 	if err1 != nil && err2 != nil {
-		if errors.Is(err1, structs.BadReqErr) || errors.Is(err2, structs.BadReqErr) {
+		if errors.Is(err1, structs.ErrBadReq) || errors.Is(err2, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error")
 			w.WriteHeader(http.StatusBadRequest)
@@ -53,7 +53,7 @@ func (rt *_router) search(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	userIDs, postIDs, err := rt.db.Search(token, name_or_hashtag)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -61,10 +61,10 @@ func (rt *_router) search(w http.ResponseWriter, r *http.Request, ps httprouter.
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")	// user banned
 		w.WriteHeader(http.StatusNotFound)
@@ -85,6 +85,6 @@ func (rt *_router) search(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(IDs)
+	_ = json.NewEncoder(w).Encode(IDs)
 
 }

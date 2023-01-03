@@ -17,7 +17,7 @@ import (
 func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -35,7 +35,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -51,7 +51,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 	photoID, err := rt.db.GetUserProfilePicture(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -59,10 +59,10 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -73,6 +73,13 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+
+	}
+
+	if photoID == "" {
+		w.WriteHeader(http.StatusNotFound)		// --
+		_, _ = w.Write([]byte("The user does not yet have a profile photo"))
+        return
 
 	}
 
@@ -94,7 +101,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
     w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
 
-    io.Copy(w, img)
+    _, _ = io.Copy(w, img)
 	
 }
 
@@ -103,7 +110,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -121,7 +128,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Check the validity of the photo-id
 	err = structs.UuidCheck(photoID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -137,7 +144,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	err = rt.db.GetSinglePhoto(photoID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -145,10 +152,10 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -161,6 +168,13 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	}
+
+	// if photoID == "" {
+	// 	w.WriteHeader(http.StatusNotFound)		// --
+	// 	_, _ = w.Write([]byte("No such Photo"))
+    //     return
+
+	// }
 
 	// Retrieve the photo and send it.
 	file := filepath.Join("./pictures", photoID + ".png")
@@ -179,7 +193,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
     w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
-    io.Copy(w, img)
+    _, _ = io.Copy(w, img)
 }
 
 
@@ -187,7 +201,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -205,7 +219,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -221,7 +235,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	photoID, valCreated, err := rt.db.ChangeUserProfilePicture(userID, token, r)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -229,10 +243,10 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusForbidden)
@@ -254,7 +268,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(photoID)
+	_ = json.NewEncoder(w).Encode(photoID)
 }
 
 
@@ -262,7 +276,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -280,7 +294,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -296,7 +310,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	err = rt.db.DeleteUserProfilePicture(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -304,10 +318,10 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusForbidden)
@@ -323,5 +337,3 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusNoContent)
 }
-
-

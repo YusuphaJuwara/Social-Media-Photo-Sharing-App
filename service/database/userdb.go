@@ -3,29 +3,37 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"os"
 	"time"
 	"net/http"
 	"io"
+	"fmt"
+	"io/fs"
 
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/gofrs/uuid"
 )
 
-// var (
-// 	structs.UnAuthErr = structs.UnAuthError
-// 	structs.ForbiddenErr = structs.ForbiddenError
-// 	structs.NotFoundErr = structs.NotFoundError
-// 	BadReqErr 	= structs.BadReqErr
-// )
+const (
+	sqlBanFollowCheck = `
+	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
+		(post.userid = ? OR 
+				(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+				AND (user.private = 0 OR 
+						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
+						)
+					)
+				)
+		)`
+)
 
-// If the server does not wish to make information available to the client (like accessing a user's details who banned the client), the status code 404 (Not Found) can be used instead.
-
-// If user A sets his profile to private and user B does not follow him, then for user B, user A exists and can get only his profile info (including whether or not user A sets his profile to provate) but cannot get any other info apart from that.
-
-func sessionCheck(token string, db *sql.DB) ( string, error ) {
+// If the server does not wish to make information available to the client (like accessing a user's details 
+// who banned the client), the status code 404 (Not Found) can be used instead.
+// If user A sets his profile to private and user B does not follow him, then for user B,
+// user A exists and can get only his profile info (including whether or not user A sets his profile to provate) 
+// but cannot get any other info apart from that.
+func sessionCheck(token string, db *sql.DB) (string, error) {
 	sqlSes := "SELECT userid FROM session WHERE id = ?"
 	var userid string
 	err := db.QueryRow(sqlSes, token).Scan(&userid)
@@ -41,36 +49,35 @@ func banCheck(id1, id2 string, db *sql.DB) error {
         	return err
 		}
     }
+	
 	// The user is banned if i > 0, so he shouldn't be able to see any info of the banner.
 	if i > 0 { 
-		return structs.NotFoundErr
+		return structs.ErrNotFound
 	}
 	return nil
 } 
 
 // Users' profile information are available to all except those whom the users ban
-func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
-
+func (db *appdbimpl) GetAllUsers(token string) ([]structs.User, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, userid)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 		return nil, structs.NotFoundErr
+	// err  = banCheck(userID, userid)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 		return nil, structs.ErrNotFound
     // } else if err != nil {
     //     return nil, err 
 	// } 
-
 	// sqlGetAllUsers := `SELECT id, private, profilename, profilemessage, gender, birthdate, profilephotoid FROM user`
 
 	sqlGetAllUsers := `
 		SELECT user.id, profilename, profilemessage, gender, birthdate, profilephotoid
-		FROM user WHERE NOT EXISTS ( SELECT * FROM ban WHERE bannerid = user.id AND bannedid = ?)`
+		FROM user WHERE NOT EXISTS (SELECT * FROM ban WHERE bannerid = user.id AND bannedid = ?)`
 
 	rows, err := db.c.Query(sqlGetAllUsers, userid)
 	if err != nil {
@@ -114,15 +121,13 @@ func (db *appdbimpl) GetAllUsers(token string) ( []structs.User, error ) {
 		user.PostIDs = postids
 		users = append(users, user)
 	}
-
 	if err = rows.Err(); err != nil {
         return nil, err
 	}
-
 	return users, nil
 }
 
-func getPostIds(user string, db *sql.DB) ( []string, error ) {
+func getPostIds(user string, db *sql.DB) ([]string, error) {
 	sqlPostIds := `SELECT id FROM post WHERE userid = ?`
 	rows, err := db.Query(sqlPostIds, user)
 	if err != nil {
@@ -139,19 +144,17 @@ func getPostIds(user string, db *sql.DB) ( []string, error ) {
 		}
 		postids = append(postids, postid)
 	}
-
 	if err = rows.Err(); err != nil {
         return nil, err
 	}
-
 	return postids, nil
 }
 
 
 // Logs in the user and returns the user ID, and the newly created token. In addition:
 // 1. If the user exists before, the string in the third return value will be "200".
-// 2. If this is the first time ( for sign up), signs up the user and returns "201" in the third return value.
-func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) {
+// 2. If this is the first time (for sign up), signs up the user and returns "201" in the third return value.
+func (db *appdbimpl) DoLogin(username string) (string, string, string, error) {
 	nt, err := uuid.NewV4()
 	if err != nil {
 		return "", "", "", err
@@ -163,8 +166,9 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 	if err != nil {
 		return "", "", "", err
 	}
-	
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 	
 	var user1 string
 	err = tx.QueryRow(`SELECT id FROM user WHERE username = ?`, username).Scan(&user1)
@@ -176,7 +180,6 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 			return "", "", "", err
 		}
 		newid := nid.String()
-		
 		_, err = tx.Exec(`INSERT INTO user (id, username) VALUES (?, ?)`, newid, username)
 		if err != nil {
 			return "", "", "", err
@@ -185,13 +188,10 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 		if err != nil {
 			return "", "", "", err
 		}
-
 		if err = tx.Commit(); err != nil {
 			return "", "", "", err
-
 		}
 		return newid, newtoken, "201", nil
-
 	} else if err != nil {
 		return "", "", "", err
 	}
@@ -203,10 +203,8 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
         	return "", "", "", err
 		}
     }
-
 	if id != "" {
 		return user1, id, "200", nil
-
 	}
 
 	sqlLogin := `INSERT INTO session (id, userid) VALUES (?, ?)`
@@ -215,12 +213,10 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
     _, err = tx.Exec(sqlLogin, newtoken, user1)
 	if err != nil {
 		return "", "", "", err
-
 	}
 
 	if err = tx.Commit(); err != nil {
 		return "", "", "", err
-
 	}
 
 	return user1, newtoken, "200", nil
@@ -228,40 +224,35 @@ func (db *appdbimpl) DoLogin(username string) ( string, string, string, error ) 
 
 // This deletes the sign-in token
 func (db *appdbimpl) LogOut(token string) error {
+	// _, err := sessionCheck(token, db.c)
+	// if errors.Is(err, sql.ErrNoRows) {
+	// 	return structs.ErrUnAuth
+	// } else if err != nil {
+	// 	return err
+	// }
 
-	_, err := sessionCheck(token, db.c)
-	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
-	} else if err != nil {
-		return err
-	}
+	_, err := db.c.Exec(`DELETE FROM session WHERE id = ?;`, token)
+	// if err != nil {
+	// 	return err
+	// }
 
-	row, err := db.c.Exec(`DELETE FROM session WHERE id = ?;`, token)
-
-	if err != nil {
-		return err
-
-	}
-
-	i, err := row.RowsAffected()
-	if err != nil {
-		return err
-
-	}
+	// i, err := row.RowsAffected()
+	// if err != nil {
+	// 	return err
+	// }
 
 	// if i = 0, it means that the user is not logged in
-	if i == 0 {
-		return structs.NotFoundErr
-
-	}
-	return nil
+	// if i == 0 {
+	// 	return structs.ErrNotFound
+	// }
+	return err
 }
 
 // See if the user profile is set to private or not: true or false.
-func (db *appdbimpl) GetPrivate(userID, token string) ( bool, error ) {
+func (db *appdbimpl) GetPrivate(userID, token string) (bool, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return false, structs.UnAuthErr
+		return false, structs.ErrUnAuth
 	} else if err != nil {
 		return false, err
 	}
@@ -271,7 +262,7 @@ func (db *appdbimpl) GetPrivate(userID, token string) ( bool, error ) {
 	err = db.c.QueryRow(`SELECT private FROM user WHERE id = ? AND NOT EXISTS (
 						SELECT * FROM ban WHERE bannerid = user.id AND bannedid = ?)`, userID, userid).Scan(&val)
 	if errors.Is(err, sql.ErrNoRows) {
-		return false, structs.NotFoundErr		// userID not found or userID banned userid
+		return false, structs.ErrNotFound		// userID not found or userID banned userid
 	} else if err != nil {	// Internal server error
 		return false, err
 	}
@@ -284,46 +275,46 @@ func (db *appdbimpl) GetPrivate(userID, token string) ( bool, error ) {
 func (db *appdbimpl) SetPrivate(userID, token string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
-	_, err = db.c.Exec(`UPDATE user SET user.private = 1 WHERE id = ?`, userID)
+	_, err = db.c.Exec(`UPDATE user SET private = 1 WHERE id = ?`, userID)
+
 	return err
 }
 
 func (db *appdbimpl) SetPublic(userID, token string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
-	_, err = db.c.Exec(`UPDATE user SET user.private = 0 WHERE id = ?`, userID)
+	_, err = db.c.Exec(`UPDATE user SET private = 0 WHERE id = ?`, userID)
 	return err
 }
 
-func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error ) {
-
+func (db *appdbimpl) GetUserProfile(userID, token string) (*structs.User, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( userID, userid, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-		return nil, structs.NotFoundErr
+	err  = banCheck(userID, userid, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+		return nil, structs.ErrNotFound
     } else if err != nil {
         return nil, err 
 	} 
@@ -333,9 +324,8 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 	sqlGetUser := `SELECT id, profilename, profilemessage, gender, birthdate, profilephotoid FROM user WHERE user.id = ?`
 	
 	err = db.c.QueryRow(sqlGetUser, userID).Scan(&user.ID, &user.ProfileName, &user.ProfileMessage, &user.Gender, &user.BirthDate, &user.ProfilePhotoID);
-
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr
+		return nil, structs.ErrNotFound
     } else if err != nil {
         return nil, err 	// Internal Server Error
 	} 
@@ -348,6 +338,7 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 			return nil, err
 		}
 	}
+
 	sqlfollowing := fmt.Sprintf(sqlCount, "follow", "followerid")
 	err = db.c.QueryRow(sqlfollowing, user.ID).Scan(&user.FollowingCount)
 	if err != nil {
@@ -355,6 +346,7 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 			return nil, err
 		}
 	}
+
 	sqlfollower := fmt.Sprintf(sqlCount, "follow", "followingid")
 	err = db.c.QueryRow(sqlfollower, user.ID).Scan(&user.FollowerCount)
 	if err != nil {
@@ -362,25 +354,26 @@ func (db *appdbimpl) GetUserProfile(userID, token string) ( *structs.User, error
 			return nil, err
 		}
 	}
+
 	postids, err := getPostIds(user.ID, db.c)
 	if err != nil {
 		return nil, err
 	}
+
 	user.PostIDs = postids
 	return &user, nil
 }
 
 // Successfully created some fields that did not exist: 201, else 204.
-func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.ProfileDetail) ( string, error ) {
-
+func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.ProfileDetail) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", err
 	}
 	if userID != userid {
-		return "", structs.ForbiddenErr
+		return "", structs.ErrForbidden
 	}
 
 	// atomic transaction
@@ -388,16 +381,16 @@ func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.Profile
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	// Update the propriate values.
 	arr1 := [...]string{pd.ProfileName, pd.ProfileMessage, pd.Gender, pd.BirthDate}
 	arr2 := [...]string{"profilename", "profilemessage", "gender", "birthdate"}
 	valCreated := "204"
-
 	for idx, elem := range arr1 {
 		if elem != "" {
-
 			// Check if the field was not empty
 			str := ""
 			sqlCheck := fmt.Sprintf("SELECT %s FROM user WHERE id = ?", arr2[idx])
@@ -429,51 +422,50 @@ func (db *appdbimpl) UpdateUserProfile(userID, token string, pd *structs.Profile
 }
 
 func (db *appdbimpl) DeleteUser(userID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
-
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
 		return err
-
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	rows, err := tx.Query("SELECT photoid FROM post WHERE userid = ?", userid)
 	if err != nil {
         return err
-
     }
 	defer rows.Close()
 
 	// For each photo of the user to be deleted, delete it from disk
 	for rows.Next() {
-
 		var photoID string
         err = rows.Scan(&photoID)
         if err != nil {
             return err
-
         }
+		if photoID == "" {
+			continue
+		}
 
 		file := filepath.Join("./pictures", photoID + ".png")
-
 		err = os.Remove(file)
 		if err != nil {
-			return err
-
+			if !errors.Is(err, fs.ErrNotExist) {
+				return err
+			}
 		}
 	}
 
@@ -485,13 +477,11 @@ func (db *appdbimpl) DeleteUser(userID, token string) error {
 	_, err = tx.Exec(`DELETE FROM user WHERE id = ? ;`, userID)
 	if err != nil {
         return err
-
 	}
 
 	err = tx.Commit()
     if err != nil {
         return err
-
 	}
 	
 	return nil
@@ -499,35 +489,33 @@ func (db *appdbimpl) DeleteUser(userID, token string) error {
 
 
 func (db *appdbimpl) SetMyUserName(userID, token string, username string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	_, err = db.c.Exec(`UPDATE user SET username = ? WHERE id = ? ;`, username, userID)
 	return err
 }
 
 // The returned uuid is the photo ID to be retrieved from directory.
-func (db *appdbimpl) GetUserProfilePicture(userID, token string) ( string, error ) {
-
+func (db *appdbimpl) GetUserProfilePicture(userID, token string) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( userID, userid, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-		return "", structs.NotFoundErr
+	err  = banCheck(userID, userid, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+		return "", structs.ErrNotFound
     } else if err != nil {
         return "", err 
 	} 
@@ -537,8 +525,8 @@ func (db *appdbimpl) GetUserProfilePicture(userID, token string) ( string, error
 
 	var pid string
 	err = db.c.QueryRow(sqlGetUser, userID).Scan(&pid);
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.NotFoundErr
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return "", structs.ErrNotFound
     } else if err != nil {
         return "", err 
 	} 
@@ -547,25 +535,25 @@ func (db *appdbimpl) GetUserProfilePicture(userID, token string) ( string, error
 }
 
 // The returned uuid is the photo ID to be sent. "204" if exists, else "201"
-func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Request) ( string, string, error) {
-
+func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Request) (string, string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", "", structs.UnAuthErr
+		return "", "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", "", err
 	}
 	// If the owner is not the one requesting to modify the protected resource.
 	if userid != userID {
-		return "", "", structs.ForbiddenErr
+		return "", "", structs.ErrForbidden
 	}
 
 	tx, err := db.c.Begin()
 	if err != nil {
         return "", "", err
     }
-	defer tx.Rollback()
-
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	pid := ""
 	err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&pid);
@@ -576,12 +564,10 @@ func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Requ
 	}
 
 	if pid != "" {
-
 		err = updateProfPic(pid, r)
 		if err != nil {
             return "", "", err
         }
-
 		return pid, "204", nil
 	}
 
@@ -589,10 +575,10 @@ func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Requ
 	if err != nil {
         return "", "", err
 	}
+
 	_, err = tx.Exec("UPDATE user SET profilephotoid = ? WHERE id = ?", uid.String(), userid)
 	if err != nil {
         return "", "", err
-
 	}
 
 	err = updateProfPic(uid.String(), r)
@@ -603,14 +589,12 @@ func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Requ
 	err = tx.Commit()
     if err != nil {
 		return "", "", err
-
 	}
 
 	return uid.String(), "201", nil
 }
 
 func updateProfPic(photoID string, r *http.Request) error {
-	
 	// Form contains the parsed form data, including both the URL field's query parameters and 
 	// the PATCH, POST, or PUT form data. This field is only available after ParseForm is called.
 	// But ParseMultipartForm automatically calls ParseForm
@@ -618,7 +602,6 @@ func updateProfPic(photoID string, r *http.Request) error {
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
         return err
-
 	}
 
 	// (multipart.File, *multipart.FileHeader, error)
@@ -628,7 +611,6 @@ func updateProfPic(photoID string, r *http.Request) error {
 	photo_file, _, err := r.FormFile("photo")
 	if err != nil {
         return err
-
 	}
 
 	file := filepath.Join("./pictures", photoID + ".png")
@@ -637,86 +619,69 @@ func updateProfPic(photoID string, r *http.Request) error {
 	// If the file does not exist, it is created with mode 0666 (before umask). 
 	// If successful, methods on the returned File can be used for I/O; the associated file descriptor has mode O_RDWR. 
 	// If there is an error, it will be of type *PathError.
-
 	img, err := os.Create(file)
-
 	if err != nil {
         return err
-
 	}
-
 	defer img.Close()
-
 
 	// Copy copies from src to dst until either EOF is reached on src or an error occurs. 
 	// It returns the number of bytes copied and the first error encountered while copying, if any.
-
 	// A successful Copy returns err == nil, not err == EOF. 
 	// Because Copy is defined to read from src until EOF, it does not treat an EOF from Read as an error to be reported.
-
 	_, err = io.Copy(img, photo_file)
-
 	if err != nil {
         return err
-
 	}
-
 	return nil
 }
 
-
 func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
-
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
-
 	}
-	
 	if userID != userid {
-		return structs.ForbiddenErr
-
+		return structs.ErrForbidden
 	}
 
 	tx, err := db.c.Begin()
 	if err != nil {
         return err
     }
-
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	var photoID string
 	err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&photoID)
-
 	if err != nil {
 		// if !errors.Is(err, sql.ErrNoRows) {
        	//  	return err
 		// }
-
 		return err
     }
+	if photoID == "" {
+		return nil
+	}
 
 	file := filepath.Join("./pictures", photoID + ".png")
 
 	err = os.Remove(file)
-    if err != nil {
-        return err
-
-    }
-
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+	}
 
 	_, err = tx.Exec("UPDATE user SET profilephotoid = '' WHERE id = ?", userid)
 	if err != nil {
         return err
-
 	}
-
 	if err = tx.Commit(); err != nil {
 		return err
-
 	}
 
 	return nil
@@ -725,11 +690,10 @@ func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
 
 
 // First slice with user IDs and second slice with post IDs that corresponds to the search term.
-func (db *appdbimpl) Search(token string, search string) ( []string, []string , error) {
-
+func (db *appdbimpl) Search(token string, search string) ([]string, []string , error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, structs.UnAuthErr
+		return nil, nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, nil, err
 	}
@@ -750,23 +714,21 @@ func (db *appdbimpl) Search(token string, search string) ( []string, []string , 
         }
 
 		// If the client is banned, then for the client, the user does not exist. So return 404.
-		err  = banCheck( id, userid, db.c)
+		err  = banCheck(id, userid, db.c)
 		if err == nil {
 			users = append(users, id)
-		} else if errors.Is(err, structs.NotFoundErr) {
+		} else if errors.Is(err, structs.ErrNotFound) {
 			continue
 		} else if err != nil {
 			return nil, nil, err 
 		}
 	}
-
 	if err = rows.Err(); err != nil {
         return nil, nil, err
 	}
 
 	var posts []string
-	rows, err = db.c.Query(`SELECT post.id FROM post INNER JOIN hashtag ON post.id = hashtag.postid WHERE hashtag = ?
-							AND NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?) `, search, userid)
+	rows, err = db.c.Query(`SELECT post.id FROM post INNER JOIN hashtag ON post.id = hashtag.postid WHERE hashtag = ? AND NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?) `, search, userid)
 	if err != nil {
         return nil, nil, err
     }
@@ -777,9 +739,8 @@ func (db *appdbimpl) Search(token string, search string) ( []string, []string , 
         if err != nil {
             return nil, nil, err
         }
-		posts = append( posts, pid)
+		posts = append(posts, pid)
 	}
-
 	if err = rows.Err(); err != nil {
         return nil, nil,  err
 	}
@@ -788,18 +749,17 @@ func (db *appdbimpl) Search(token string, search string) ( []string, []string , 
 }
 
 // First slice with user followers' IDs and second slice with user followings' IDs
-func (db *appdbimpl) GetUserFollows(userID, token string) ( []string, []string , error) {
-
+func (db *appdbimpl) GetUserFollows(userID, token string) ([]string, []string , error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, structs.UnAuthErr
+		return nil, nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, nil, err
 	}
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( userID, userid, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-			return nil, nil, structs.NotFoundErr
+	err  = banCheck(userID, userid, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+			return nil, nil, structs.ErrNotFound
     } else if err != nil {
         return nil, nil, err 
 	} 
@@ -807,12 +767,12 @@ func (db *appdbimpl) GetUserFollows(userID, token string) ( []string, []string ,
 	// Anyone who does not follow a user and the user sets his profile to private, then cannot see any other details of the user except the user profile information including whether or not the user set it to private.
 	sqlfollowCheck := `SELECT count(*) FROM follow as f1 INNER JOIN user ON f1.followingid = user.id WHERE 
 							f1.followingid = ? AND user.private = 1 AND NOT EXISTS (
-								SELECT * FROM follow as f2 WHERE f2.followingid = f1.followingid AND f2.followerid = ? )`
+								SELECT * FROM follow as f2 WHERE f2.followingid = f1.followingid AND f2.followerid = ?)`
 
     i := 0
 	err = db.c.QueryRow(sqlfollowCheck, userID, userid).Scan(&i) 
 	if i > 0 { 		// if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, structs.NotFoundErr
+		return nil, nil, structs.ErrNotFound
 	} else if err != nil {
 		return nil, nil, err 
 	} 
@@ -860,25 +820,24 @@ func (db *appdbimpl) GetUserFollows(userID, token string) ( []string, []string ,
 
 // The user with userID follows the user with followID
 func (db *appdbimpl) FollowUser(userID, followID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	if userID != userid {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	if userID == followID {
-		return structs.ForbiddenErr //errors.New("You cannot follow yourself")
+		return structs.ErrForbidden // errors.New("You cannot follow yourself")
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( followID, userID, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-		return structs.NotFoundErr
+	err  = banCheck(followID, userID, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+		return structs.ErrNotFound
     } else if err != nil {
         return err 
 	} 
@@ -890,24 +849,23 @@ func (db *appdbimpl) FollowUser(userID, followID, token string) error {
 
 // The user with userID unfollows the user with followID
 func (db *appdbimpl) UnfollowUser(userID, followID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return  structs.UnAuthErr
+		return  structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	if userID != userid {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	if userID == followID {
-		return structs.ForbiddenErr //errors.New("You cannot unfollow yourself")
+		return structs.ErrForbidden // errors.New("You cannot unfollow yourself")
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( followID, userID, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-		return structs.NotFoundErr
+	err  = banCheck(followID, userID, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+		return structs.ErrNotFound
     } else if err != nil {
         return err 
 	} 
@@ -918,17 +876,16 @@ func (db *appdbimpl) UnfollowUser(userID, followID, token string) error {
 }
 
 // users who are banned by the userID
-func (db *appdbimpl) GetBanUsers(userID, token string) ( []string, error) {
-
+func (db *appdbimpl) GetBanUsers(userID, token string) ([]string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 	// Only the user himself can see his banned list
 	if userID != userid {
-		return nil, structs.ForbiddenErr
+		return nil, structs.ErrForbidden
 	}
 	var bannedids []string
 	rows, err := db.c.Query(`SELECT b1.bannedid FROM ban as b1 WHERE b1.bannerid = ?`, userID)
@@ -954,26 +911,25 @@ func (db *appdbimpl) GetBanUsers(userID, token string) ( []string, error) {
 
 // The user with userID bans the user with banID
 func (db *appdbimpl) BanUser(userID, banID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	if userID != userid {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 
 	if userID == banID {
-		return structs.ForbiddenErr //errors.New("You cannot ban yourself")
+		return structs.ErrForbidden // errors.New("You cannot ban yourself")
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, banID, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 	return structs.NotFoundErr
+	// err  = banCheck(userID, banID, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	return structs.ErrNotFound
     // } else if err != nil {
     //     return err 
 	// } 
@@ -986,24 +942,23 @@ func (db *appdbimpl) BanUser(userID, banID, token string) error {
 
 // The user with userID unbans the user with banID
 func (db *appdbimpl) UnbanUser(userID, banID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	if userID != userid {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	if userID == banID {
-		return structs.ForbiddenErr //errors.New("You cannot ban/unban yourself")
+		return structs.ErrForbidden // errors.New("You cannot ban/unban yourself")
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, userID, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 	return structs.NotFoundErr
+	// err  = banCheck(userID, userID, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	return structs.ErrNotFound
     // } else if err != nil {
     //     return err 
 	// } 
@@ -1014,27 +969,26 @@ func (db *appdbimpl) UnbanUser(userID, banID, token string) error {
 	return err
 }
 
-// Check if the photoID exists and the user is allowed to access it -> nil, else error.
+// if the photoID exists and the user is allowed to access it -> nil, else error.
 func (db *appdbimpl) GetSinglePhoto(photoID, token string) error {
-
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
-	// err  = banCheck( userID, userID, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 	return structs.NotFoundErr
+	// err  = banCheck(userID, userID, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	return structs.ErrNotFound
     // } else if err != nil {
     //     return err 
 	// } 
 
 	sqlGetSinglephoto := `
 	SELECT post.photoid FROM post INNER JOIN user ON post.userid = user.id WHERE post.photoid = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+		(post.userid = ? OR 
+				(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
 				AND (user.private = 0 OR 
 						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 						)
@@ -1043,40 +997,39 @@ func (db *appdbimpl) GetSinglePhoto(photoID, token string) error {
 		)`
 	var pid string
 	err = db.c.QueryRow(sqlGetSinglephoto, photoID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
         return err
     }
-	if pid == photoID { // --
-        return nil
-    }
+	// if pid == photoID { // --
+    //     return nil
+    // }
     return nil
 }
 
 // This sends the post with all its metadata attached
 // It should be named GetPost, but due to the project requirements, it is called GetPhoto.
-func (db *appdbimpl) GetPhoto(postID, token string) ( *structs.Post, error ) {
-
+func (db *appdbimpl) GetPhoto(postID, token string) (*structs.Post, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, userID, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 	return structs.NotFoundErr
+	// err  = banCheck(userID, userID, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	return structs.ErrNotFound
     // } else if err != nil {
     //     return err 
 	// } 
 
 	sqlGetPhoto := `
-	SELECT * FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+	SELECT post.id, post.photoid, post.userid, post.caption, post.datetime FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
+		(post.userid = ? OR 
+				(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
 				AND (user.private = 0 OR 
 						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 						)
@@ -1086,7 +1039,7 @@ func (db *appdbimpl) GetPhoto(postID, token string) ( *structs.Post, error ) {
 	var post = structs.Post{}
 	err = db.c.QueryRow(sqlGetPhoto, postID, userid, userid, userid).Scan(&post.ID, &post.PhotoID, &post.UserID, &post.Caption, &post.DateTime)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr	// photoID not found or user banned or (private = true and unfollow)
+		return nil, structs.ErrNotFound	// photoID not found or user banned or (private = true and unfollow)
 	} else if err != nil {
 		return nil, err
 	}
@@ -1107,10 +1060,8 @@ func (db *appdbimpl) GetPhoto(postID, token string) ( *structs.Post, error ) {
 	}
 
 	hashtags, err := getHashtags(postID, db.c)
-
 	if err != nil {
 		return nil, err
-
 	}
 	
 	post.Hashtags = hashtags
@@ -1118,7 +1069,7 @@ func (db *appdbimpl) GetPhoto(postID, token string) ( *structs.Post, error ) {
 	return &post, nil
 }
 
-func getHashtags ( postID string, db *sql.DB) ( []string, error ) {
+func getHashtags (postID string, db *sql.DB) ([]string, error) {
 	var hashtags []string
 	rows, err := db.Query("SELECT hashtag FROM hashtag WHERE postid = ?", postID)
 	if err != nil {
@@ -1142,26 +1093,25 @@ func getHashtags ( postID string, db *sql.DB) ( []string, error ) {
 }
 
 // GetPhotos gets all posts of all users who did not set their profiles to private and did not ban the user.
-func (db *appdbimpl) GetPhotos( token string ) ( []structs.Post, error ) {
-
+func (db *appdbimpl) GetPhotos(token string) ([]structs.Post, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, userID, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 	return structs.NotFoundErr
+	// err  = banCheck(userID, userID, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 	return structs.ErrNotFound
     // } else if err != nil {
     //     return err 
 	// } 
 
 	sqlGetPhotos := `
-	SELECT * FROM post INNER JOIN user ON post.userid = user.id WHERE post.userid = ? OR 
-					(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+	SELECT  post.id, post.photoid, post.userid, post.caption, post.datetime FROM post INNER JOIN user ON post.userid = user.id WHERE post.userid = ? OR 
+					(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
 						AND (user.private = 0 OR (user.private = 1 AND 
 							EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 													)
@@ -1199,7 +1149,6 @@ func (db *appdbimpl) GetPhotos( token string ) ( []structs.Post, error ) {
 		hashtags, err := getHashtags(post.ID, db.c)
 		if err != nil {
 			return nil, err
-	
 		}	
 		
 		post.Hashtags = hashtags
@@ -1214,21 +1163,21 @@ func (db *appdbimpl) GetPhotos( token string ) ( []structs.Post, error ) {
 }
 
 // Get the list of posts posted by the given user's followings (including the user himself).
-func (db *appdbimpl) GetMyStream(userID, token string ) ( []structs.Post, error ) {
-
+func (db *appdbimpl) GetMyStream(userID, token string) ([]structs.Post, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
+
 	// only the user himself can get the posts of his followings.
 	if userid != userID {
-		return nil, structs.ForbiddenErr
+		return nil, structs.ErrForbidden
 	}
 	sqlGetStream := `
-	SELECT * FROM post WHERE post.userid = ? OR 
-						(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+	SELECT  post.id, post.photoid, post.userid, post.caption, post.datetime FROM post WHERE post.userid = ? OR 
+						(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
 						AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 						)`
 
@@ -1264,9 +1213,7 @@ func (db *appdbimpl) GetMyStream(userID, token string ) ( []structs.Post, error 
 		hashtags, err := getHashtags(post.ID, db.c)
 		if err != nil {
 			return nil, err
-	
 		}
-		
 		
 		post.Hashtags = hashtags
 		posts = append(posts, post)
@@ -1280,25 +1227,25 @@ func (db *appdbimpl) GetMyStream(userID, token string ) ( []structs.Post, error 
 }
 
 // Get the list of posts posted by the given user.
-func (db *appdbimpl) GetUserPhotos(userID, token string ) ( []structs.Post, error ) {
-
+func (db *appdbimpl) GetUserPhotos(userID, token string) ([]structs.Post, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	err  = banCheck( userID, userid, db.c)
-	if errors.Is(err, structs.NotFoundErr) {
-		return nil, structs.NotFoundErr
+	err  = banCheck(userID, userid, db.c)
+	if errors.Is(err, structs.ErrNotFound) {
+		return nil, structs.ErrNotFound
     } else if err != nil {
         return nil, err 
 	} 
 
 	sqlGetUserPhotos := `
-	SELECT * FROM post INNER JOIN user ON post.userid = user.id WHERE post.userid = ? AND 
+	SELECT post.id, post.photoid, post.userid, post.caption, post.datetime
+	FROM post INNER JOIN user ON post.userid = user.id WHERE post.userid = ? AND 
 	(post.userid = ? OR user.private = 0 OR (user.private = 1 AND 
 								EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 											)
@@ -1336,9 +1283,7 @@ func (db *appdbimpl) GetUserPhotos(userID, token string ) ( []structs.Post, erro
 		hashtags, err := getHashtags(post.ID, db.c)
 		if err != nil {
 			return nil, err
-	
 		}
-		
 		
 		post.Hashtags = hashtags
 		posts = append(posts, post)
@@ -1351,17 +1296,15 @@ func (db *appdbimpl) GetUserPhotos(userID, token string ) ( []structs.Post, erro
 	return posts, nil
 }
 
-func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags []string, r *http.Request ) ( string, error ) {
-
+func (db *appdbimpl) UploadPhoto(userID, token string, caption string, hashtags []string, r *http.Request) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", err
 	}
-	
 	if userid != userID {
-		return "", structs.ForbiddenErr
+		return "", structs.ErrForbidden
 	}
 
 	uid, err := uuid.NewV4()
@@ -1388,7 +1331,9 @@ func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	_, err = tx.Exec(sqlUploadPhoto, postID, photoID, userID, caption, datetime)
 	if err != nil {
@@ -1402,10 +1347,9 @@ func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags
         }
 	}
 
-	err = updateProfPic(postID, r)
+	err = updateProfPic(photoID, r)
 	if err != nil {
         return "", err
-
     }
 
 	if err = tx.Commit(); err != nil {
@@ -1416,33 +1360,31 @@ func (db *appdbimpl) UploadPhoto( userID, token string, caption string, hashtags
 }
 
 
-func (db *appdbimpl) ModifyCaption( userID, token, postID, caption string ) error {
-
+func (db *appdbimpl) ModifyCaption(userID, token, postID, caption string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	_, err = db.c.Exec("UPDATE post SET caption = ? WHERE id = ?", caption, postID)
 	return err
 }
 
 // Deletes a post with the given post ID together with the photo, caption, likes and comments, etc.
-func (db *appdbimpl) DeletePhoto( userID, token, postID string) error {
-
+func (db *appdbimpl) DeletePhoto(userID, token, postID string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 
 	// atomic transaction
@@ -1450,21 +1392,18 @@ func (db *appdbimpl) DeletePhoto( userID, token, postID string) error {
 	if err != nil {
 		return err
 	}
-	
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	// The photo id to be deleted from disk
 	var photoID string
 	err = tx.QueryRow("SELECT photoid FROM post WHERE post.id = ?", postID).Scan(&photoID)
-
 	if err != nil {
-		// if !errors.Is(err, sql.ErrNoRows) {
-       	//  	return err
-		// }
-
-		return err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
     }
-
 
 	// sqlDeleteP := `
 	// 				DELETE FROM post WHERE post.id = ?;
@@ -1475,19 +1414,21 @@ func (db *appdbimpl) DeletePhoto( userID, token, postID string) error {
 	// _, err = tx.Exec(sqlDeleteP, postID, postID, postID, postID)
 
 	// Cascade delete
-	sqlDeleteP := `DELETE FROM post WHERE post.id = ?;`
+	sqlDeleteP := `DELETE FROM post WHERE id = ?;`
 	_, err = tx.Exec(sqlDeleteP, postID)
 	if err != nil {
 		return err
 	}
 
-	file := filepath.Join("./pictures", photoID + ".png")
-
-	err = os.Remove(file)
-    if err != nil {
-        return err
-
-    }
+	if photoID != "" {
+		file := filepath.Join("./pictures", photoID + ".png")
+		err = os.Remove(file)
+		if err != nil {
+			if !errors.Is(err, fs.ErrNotExist) {
+				return err
+			}
+		}
+	}
 
 	// Commit the transaction.
     if err = tx.Commit(); err != nil {
@@ -1498,16 +1439,15 @@ func (db *appdbimpl) DeletePhoto( userID, token, postID string) error {
 }
 
 // Return "204" if hashtag already exists, else "201".
-func (db *appdbimpl) AddHashtag( userID, token, postID string, hashtag string ) ( string, error ) {
-
+func (db *appdbimpl) AddHashtag(userID, token, postID string, hashtag string) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", err
 	}
 	if userid != userID {
-		return "", structs.ForbiddenErr
+		return "", structs.ErrForbidden
 	}
 
 	// Check if the poster is the one trying to add the hashtag.
@@ -1519,7 +1459,7 @@ func (db *appdbimpl) AddHashtag( userID, token, postID string, hashtag string ) 
 		}
     }
 	if i <= 0 { 
-		return "", structs.ForbiddenErr
+		return "", structs.ErrForbidden
 	}
 
 	row, err := db.c.Exec("INSERT OR IGNORE INTO hashtag (hashtag, postid) VALUES (?, ?)", hashtag, postID)
@@ -1534,19 +1474,19 @@ func (db *appdbimpl) AddHashtag( userID, token, postID string, hashtag string ) 
 	if i == 0 {
 		return "204", nil
 	}
+
 	return "201", nil
 }
 
-func (db *appdbimpl) DeleteHashtag( userID, token, postID string, hashtag string ) error {
-
+func (db *appdbimpl) DeleteHashtag(userID, token, postID string, hashtag string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 	// Check if the poster is the one trying to delete the hashtag.
 	i := 0
@@ -1557,7 +1497,7 @@ func (db *appdbimpl) DeleteHashtag( userID, token, postID string, hashtag string
 		}
     }
 	if i <= 0 { 
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 
 	_, err = db.c.Exec("DELETE FROM hashtag WHERE hashtag = ? AND postID = ? ", hashtag, postID)
@@ -1566,39 +1506,26 @@ func (db *appdbimpl) DeleteHashtag( userID, token, postID string, hashtag string
 }
 
 
-func (db *appdbimpl) GetPostHashtags( token, postID string ) ( []string, error ) {
-
+func (db *appdbimpl) GetPostHashtags(token, postID string) ([]string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
-	// err  = banCheck( userID, userid, db.c)
-	// if errors.Is(err, structs.NotFoundErr) {
-	// 		return nil, structs.NotFoundErr
+	// err  = banCheck(userID, userid, db.c)
+	// if errors.Is(err, structs.ErrNotFound) {
+	// 		return nil, structs.ErrNotFound
     // } else if err != nil {
     //     return nil, err 
 	// } 
 	
-
-	// Check everything first.
-	sqlGetPostH := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
 	var pid string
-	err = db.c.QueryRow(sqlGetPostH, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return nil, structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return nil, err
 	}
@@ -1627,31 +1554,18 @@ func (db *appdbimpl) GetPostHashtags( token, postID string ) ( []string, error )
 }
 
 // Get the like-count and the user IDs who liked the post.
-func (db *appdbimpl) GetLikes( token, postID string ) ( *structs.Like, error ) {
-
+func (db *appdbimpl) GetLikes(token, postID string) (*structs.Like, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
-	// Check everything first.
-	sqlGetLikes := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
-
 	var pid string
-	err = db.c.QueryRow(sqlGetLikes, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return nil, structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return nil, err
 	}
@@ -1671,7 +1585,6 @@ func (db *appdbimpl) GetLikes( token, postID string ) ( *structs.Like, error ) {
         }
 		userids = append(userids, pid)
 	}
-
 	if err = rows.Err(); err != nil {
         return nil, err
 	}
@@ -1683,35 +1596,22 @@ func (db *appdbimpl) GetLikes( token, postID string ) ( *structs.Like, error ) {
 	return &likes, nil
 }
 
-func (db *appdbimpl) LikePhoto( userID, token, postID string ) error {
-
+func (db *appdbimpl) LikePhoto(userID, token, postID string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
 
-	// Check everything first.
-	sqlGetLikes := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
-
 	var pid string
-	err = db.c.QueryRow(sqlGetLikes, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return err
 	}
@@ -1719,68 +1619,40 @@ func (db *appdbimpl) LikePhoto( userID, token, postID string ) error {
 	return nil
 }
 
-func (db *appdbimpl) UnlikePhoto( userID, token, postID string ) error {
-
+func (db *appdbimpl) UnlikePhoto(userID, token, postID string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
-
 	if userid != userID {
-		return structs.ForbiddenErr
+		return structs.ErrForbidden
 	}
-
-	// Check everything first.
-	sqlUnLikes := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
 
 	var pid string
-	err = db.c.QueryRow(sqlUnLikes, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // Get all the comments of a given post.
-func (db *appdbimpl) GetPhotoComments( token, postID string ) ( []structs.Comment, error ) {
-
+func (db *appdbimpl) GetPhotoComments(token, postID string) ([]structs.Comment, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
-	// Check everything first.
-	sqlCommentsCheck := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
-
 	var pid string
-	err = db.c.QueryRow(sqlCommentsCheck, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return nil, structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return nil, err
 	}
@@ -1809,31 +1681,18 @@ func (db *appdbimpl) GetPhotoComments( token, postID string ) ( []structs.Commen
 }
 
 //  Places a new comment and returns the newly created comment ID.
-func (db *appdbimpl) CommentPhoto( token, postID string, message string ) ( string, error ) {
-
+func (db *appdbimpl) CommentPhoto(token, postID string, message string) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.UnAuthErr
+		return "", structs.ErrUnAuth
 	} else if err != nil {
 		return "", err
 	}
 
-	// Check everything first.
-	sqlComment := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
-
 	var pid string
-	err = db.c.QueryRow(sqlComment, postID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.NotFoundErr	// not found or banned or (private = true and unfollow)
+	err = db.c.QueryRow(sqlBanFollowCheck, postID, userid, userid, userid).Scan(&pid)
+	if errors.Is(err, sql.ErrNoRows) || pid == "" {
+		return "", structs.ErrNotFound	// not found or banned or (private = true and unfollow)
 	} else if err != nil {
 		return "", err
 	}
@@ -1842,6 +1701,7 @@ func (db *appdbimpl) CommentPhoto( token, postID string, message string ) ( stri
 	if err != nil {
         return "", err
     }
+
 	commentID := uid.String()
 	datetime := time.Now().Format("2006-01-02T15:04:05Z")
 
@@ -1857,63 +1717,51 @@ func (db *appdbimpl) CommentPhoto( token, postID string, message string ) ( stri
 	return commentID, nil
 }
 
-func (db *appdbimpl) GetComment( token, commentID string ) ( *structs.Comment, error ) {
-
+func (db *appdbimpl) GetComment(token, commentID string) (*structs.Comment, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.UnAuthErr
+		return nil, structs.ErrUnAuth
 	} else if err != nil {
 		return nil, err
 	}
 
 	var comment = structs.Comment{}
 	err = db.c.QueryRow("SELECT * FROM comment WHERE comment.id = ? ", commentID).Scan(&comment.ID , &comment.PostID , &comment.UserID , &comment.Message , &comment.DateTime)
-
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr
+		return nil, structs.ErrNotFound
 	} else if err != nil {
 		return nil, err
 	}
 
 	// Even the person who placed the comment cannot get the comment if the owner of the post bans him... So late test
-	sqlCommentsCheck := `
-	SELECT post.id FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
-				AND (user.private = 0 OR 
-						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
-						)
-					)
-				)
-		)`
-
 	var pid string
-	err = db.c.QueryRow(sqlCommentsCheck, comment.PostID, userid, userid, userid).Scan(&pid)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.NotFoundErr	// banned or (private = true and unfollow)
-	} else if err != nil {
-		return nil, err
+	err = db.c.QueryRow(sqlBanFollowCheck, comment.PostID, userid, userid, userid).Scan(&pid)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
 	}
+	if pid == "" {
+        return nil, structs.ErrNotFound	// banned or (private = true and unfollow)
+    }
 
 	return &comment, nil
 }
 
 //  Deletes a given comment by the user. 
 // The user is either the one who placed the comment or on whose post the comment was placed.
-func (db *appdbimpl) UncommentPhoto( token, commentID string ) error {
-
+func (db *appdbimpl) UncommentPhoto(token, commentID string) error {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.UnAuthErr
+		return structs.ErrUnAuth
 	} else if err != nil {
 		return err
 	}
 
 	var postID, userID string
 	err = db.c.QueryRow("SELECT postid, userid FROM comment WHERE comment.id = ? ", commentID).Scan(&postID, &userID)
-
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.NotFoundErr
+		return structs.ErrNotFound
 	} else if err != nil {
 		return err
 	}
@@ -1921,8 +1769,8 @@ func (db *appdbimpl) UncommentPhoto( token, commentID string ) error {
 	// Even the person who placed the comment cannot delete/get/see the comment if the owner of the post bans him...
 	sqlCommentsCheck := `
 	SELECT post.userid FROM post INNER JOIN user ON post.userid = user.id WHERE post.id = ? AND 
-		( post.userid = ? OR 
-				(NOT EXISTS ( SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
+		(post.userid = ? OR 
+				(NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?)
 				AND (user.private = 0 OR 
 						(user.private = 1 AND EXISTS (SELECT * FROM follow WHERE followerid = ? AND followingid = post.userid)
 						)
@@ -1933,19 +1781,16 @@ func (db *appdbimpl) UncommentPhoto( token, commentID string ) error {
 	var pid string
 	err = db.c.QueryRow(sqlCommentsCheck, postID, userid, userid, userid).Scan(&pid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return structs.NotFoundErr	// banned or (private = true and unfollow)
+		return structs.ErrNotFound	// banned or (private = true and unfollow)
 	} else if err != nil {
 		return err
 	}
 
 	// Check that the user trying to delete the post is the one who placed it or on whose post it was placed
 	if userID != userid || pid != userid {
-		return structs.ForbiddenErr
-
+		return structs.ErrForbidden
 	}
 
 	_, err = db.c.Exec("DELETE FROM comment WHERE comment.id = ? ", commentID)
-
 	return err
-
 }

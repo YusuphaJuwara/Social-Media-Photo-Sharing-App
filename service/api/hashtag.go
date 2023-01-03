@@ -15,7 +15,7 @@ import (
 func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -36,7 +36,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
 		err = structs.UuidCheck(id)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -53,7 +53,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Check the validity of the hashtag
 	err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -69,7 +69,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 	valCreated, err := rt.db.AddHashtag(userID, token, postID, hashtag)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -77,10 +77,10 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden Error")
 		w.WriteHeader(http.StatusForbidden)
@@ -102,13 +102,13 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(hashtag)
+	_ = json.NewEncoder(w).Encode(hashtag)
 }
 
 func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -129,7 +129,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
 		err = structs.UuidCheck(id)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -146,7 +146,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 
 	// Check the validity of the hashtag
 	err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -162,7 +162,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 
 	err = rt.db.DeleteHashtag(userID, token, postID, hashtag)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -170,10 +170,10 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden Error")
 		w.WriteHeader(http.StatusForbidden)
@@ -194,7 +194,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -212,7 +212,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 
 	// Check the validity of the postID
 	err = structs.UuidCheck(postID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -228,7 +228,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 
 	hashtags, err := rt.db.GetPostHashtags(token, postID)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -236,10 +236,10 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -255,5 +255,5 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(hashtags)
+	_ = json.NewEncoder(w).Encode(hashtags)
 }

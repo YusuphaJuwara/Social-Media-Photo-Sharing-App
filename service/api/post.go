@@ -18,7 +18,7 @@ import (
 func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -36,7 +36,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	// Check the validity of the postID
 	err = structs.UuidCheck(postID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -52,7 +52,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	post, err := rt.db.GetPhoto(postID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -60,10 +60,10 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -79,7 +79,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(post)
+	_ = json.NewEncoder(w).Encode(post)
 }
 
 
@@ -87,7 +87,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -103,7 +103,7 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 
 	posts, err := rt.db.GetPhotos( token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -111,7 +111,7 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
 	} else if err != nil {
@@ -123,8 +123,8 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode(posts)
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(posts)
 }
 
 
@@ -132,7 +132,7 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -150,7 +150,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Check the validity of the userID
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -166,7 +166,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	posts, err := rt.db.GetMyStream(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -174,10 +174,10 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden request")
 		w.WriteHeader(http.StatusForbidden)
@@ -193,7 +193,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
+	_ = json.NewEncoder(w).Encode(posts)
 }
 
 
@@ -201,7 +201,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -219,7 +219,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 
 	// Check the validity of the userID
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -235,7 +235,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 
 	posts, err := rt.db.GetUserPhotos(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -243,10 +243,10 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -262,7 +262,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
+	_ = json.NewEncoder(w).Encode(posts)
 }
 
 
@@ -270,7 +270,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -288,7 +288,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Check the validity of the userID
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -337,7 +337,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if caption != "" {
 		err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -355,7 +355,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	if len(hashtags) > 0 {
 		for _, hashtag := range hashtags {
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
-			if errors.Is(err, structs.BadReqErr) {
+			if errors.Is(err, structs.ErrBadReq) {
 
 				ctx.Logger.WithError(err).Error("Bad Request Error format")
 				w.WriteHeader(http.StatusBadRequest)
@@ -373,7 +373,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	postID, err := rt.db.UploadPhoto(userID, token, caption, hashtags, r)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -381,10 +381,10 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden Error")
 		w.WriteHeader(http.StatusForbidden)
@@ -434,7 +434,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(postID)
+	_ = json.NewEncoder(w).Encode(postID)
 }
 
 
@@ -442,7 +442,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -464,7 +464,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	// Check the validities
 	for _, id := range [...]string{userID, postID} {
 		err = structs.UuidCheck(id)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -480,7 +480,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -496,7 +496,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 
 	err = rt.db.ModifyCaption(userID, token, postID, caption)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -504,10 +504,10 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusForbidden)
@@ -528,7 +528,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -548,7 +548,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// Check the validities
 	for _, id := range [...]string{userID, postID} {
 		err = structs.UuidCheck(id)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -565,7 +565,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	err = rt.db.DeletePhoto(userID, token, postID)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -573,23 +573,36 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	// } else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+	// 	// ctx.Logger.WithError(err).Error("The post is not found. But return No Content")
+	// 	w.WriteHeader(http.StatusNoContent)
+	// 	return
+
+	} else if errors.Is(err, structs.ErrForbidden) {
+
+		ctx.Logger.WithError(err).Error("Forbidden error")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
-		
+		// if !errors.Is(err, structs.ErrNotFound)  {
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-
 	}
 	
+	// if photoID == "" {
+	// 	w.WriteHeader(http.StatusNotFound)		// --
+	// 	_, _ = w.Write([]byte("No such photo"))
+    //     return
+
+	// }
+
+
 	// file := filepath.Join("./pictures", photoID + ".png")
 
 	// err = os.Remove(file)

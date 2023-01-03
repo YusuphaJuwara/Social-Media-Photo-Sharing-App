@@ -15,7 +15,7 @@ import (
 func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -33,7 +33,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -49,7 +49,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	FollowerIDs, FollowingIDs, err := rt.db.GetUserFollows(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -57,10 +57,10 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not Found")
 		w.WriteHeader(http.StatusNotFound)
@@ -81,7 +81,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(follows)
+	_ = json.NewEncoder(w).Encode(follows)
 
 
 }
@@ -90,7 +90,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -111,7 +111,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	for _, userid := range [...]string{userID, followID} {
 
 		err = structs.UuidCheck(userid)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -128,7 +128,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	err = rt.db.FollowUser(userID, followID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -136,16 +136,16 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -166,7 +166,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -187,7 +187,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	for _, userid := range [...]string{userID, followID} {
 
 		err = structs.UuidCheck(userid)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -204,7 +204,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 	err = rt.db.UnfollowUser(userID, followID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -212,16 +212,16 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("Not found")
 		w.WriteHeader(http.StatusNotFound)

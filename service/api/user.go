@@ -18,7 +18,7 @@ import (
 func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -35,7 +35,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	
 	users, err := rt.db.GetAllUsers(token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -43,7 +43,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
 	} else if err != nil {
@@ -62,7 +62,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -80,7 +80,7 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -96,7 +96,7 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	boolean, err := rt.db.GetPrivate(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -104,10 +104,10 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("user-id not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -128,14 +128,13 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
         return 
 
 	} else if err != nil {
-
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
         return 
@@ -146,7 +145,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -162,7 +161,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	err = rt.db.SetPrivate(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -170,10 +169,10 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
@@ -193,7 +192,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -211,7 +210,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -227,7 +226,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 
 	err = rt.db.SetPublic(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -235,10 +234,10 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
@@ -258,7 +257,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -276,7 +275,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -292,7 +291,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	
 	user, err := rt.db.GetUserProfile(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -300,10 +299,10 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.NotFoundErr) {
+	} else if errors.Is(err, structs.ErrNotFound) {
 
 		ctx.Logger.WithError(err).Error("user-id not found")
 		w.WriteHeader(http.StatusNotFound)
@@ -325,7 +324,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -343,7 +342,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -383,7 +382,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	// Check the validities for the ones that are not empty
 	if profilename != "" {
 		err = structs.PatternCheck(structs.ProfileNamePattern, profilename, structs.ProfileNameMinLen, structs.ProfileNameMaxLen)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user profile name format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -400,7 +399,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	
 	if profilemessage != "" {
 		err = structs.PatternCheck(structs.MessagePattern, profilemessage, structs.MessageMinLen, structs.MessageMaxLen)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user profile message name format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -428,7 +427,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	if birthdate != "" {
 		err = structs.DateTimeCheck(structs.DatePattern, birthdate)
-		if errors.Is(err, structs.BadReqErr) {
+		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user birthdate format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -445,7 +444,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	valCreated, err := rt.db.UpdateUserProfile(userID, token, &userProf)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -453,10 +452,10 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
@@ -485,7 +484,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -503,7 +502,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -519,7 +518,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 	
 	err = rt.db.DeleteUser(userID, token)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -527,10 +526,10 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
@@ -550,7 +549,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
@@ -568,7 +567,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	// Check the validity of the user-id
 	err = structs.UuidCheck(userID)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -586,7 +585,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	// Check the validity of the username
 	err = structs.PatternCheck(structs.UsernamePattern, username, structs.UsernameMinLen, structs.UsernameMaxLen)
-	if errors.Is(err, structs.BadReqErr) {
+	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the username format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -602,7 +601,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	err = rt.db.SetMyUserName(userID, token, username)
 
-	if errors.Is(err, structs.UnAuthErr ) {
+	if errors.Is(err, structs.ErrUnAuth ) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -610,10 +609,10 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		// w.Header().Add("www-authenticate", "Bearer ")
 
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Must be authorized to access this website"))
+		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 
-	} else if errors.Is(err, structs.ForbiddenErr) {
+	} else if errors.Is(err, structs.ErrForbidden) {
 
 		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)

@@ -54,14 +54,12 @@ type Post struct {
 type Like struct {
 	LikeCount int	`json:"like-count"`
 	UserIDs	[]string `json:"user-ids"`
-
 }
 
 type IDs struct {
 	UserIDs []string `json:"userIDs"`
 	PostIDs []string `json:"postIDs"`
 }
-
 
 type Follow struct {
 	FollowerIDs []string `json:"followers-array"`

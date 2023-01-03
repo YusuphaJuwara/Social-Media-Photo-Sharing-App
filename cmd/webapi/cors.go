@@ -12,6 +12,6 @@ func applyCORSHandler(h http.Handler) http.Handler {
 	return handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "WWW-Authenticate"}),
 		handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"}),
-		handlers.AllowedOrigins([]string{"*"}),		// * is iinsecure
+		handlers.AllowedOrigins([]string{"*"}), // * is iinsecure
 	)(h)
 }

@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	UnAuthErr = errors.New("Unauthorized user")
-	ForbiddenErr = errors.New("Forbidden")
-	NotFoundErr = errors.New("Not found")
-	BadReqErr 	= errors.New("Bad request")
+	ErrUnAuth 	 = errors.New("unauthorized user")
+	ErrForbidden = errors.New("forbidden")
+	ErrNotFound  = errors.New("not found")
+	ErrBadReq 	 = errors.New("bad request")
 )
 
 
@@ -79,11 +79,9 @@ const (
 		id TEXT NOT NULL PRIMARY KEY, 
 		userid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE
 		);`
-
 )
 
 var SqlStmtList = []string{UserS, CommentS, PostS, LikeS, FollowS, BanS, HashtagS, SessionS}
-
 
 // 3. Patterns, min and max length constants
 const (
@@ -91,7 +89,6 @@ const (
 	ProfileNamePattern			= 		"^.*[a-zA-Z].*$"
 	ProfileNameMinLen 			= 		8
 	ProfileNameMaxLen 			= 		20
-
 
 	// '^(?=.*?[a-zA-Z])[a-zA-Z0-9]{8,20}$' # at least one alphabet and 7 or more other alphanumeric characters. 8-20
 	UsernamePattern 			=		"^[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*$"
@@ -113,5 +110,4 @@ const (
 
 	// valid date and time "2006-01-02T15:04:05Z'
 	DateTimePattern	 			=		"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
-
 )

@@ -16,3 +16,4 @@ docker-compose.log
 .vscode
 .editorconfig
 *.db
+pictures/

@@ -29,11 +29,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api"
-	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"	
-	_"github.com/ardanlabs/conf"
-	_"github.com/mattn/go-sqlite3"
+	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
+	_ "github.com/ardanlabs/conf"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
-	_"math/rand"
+	_ "math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,16 +42,15 @@ import (
 )
 
 const (
-		APIHost         string 			= ":3000"
-		DebugHost       string  	 	= ":4000"
-		ReadTimeout     time.Duration 	= 5 * time.Second
-		WriteTimeout    time.Duration 	= 5 * time.Second
-		ShutdownTimeout time.Duration 	= 5 * time.Second
-		Debug 			bool 			= true
+	APIHost         string        = ":3000"
+	// DebugHost       string        = ":4000"
+	ReadTimeout     time.Duration = 5 * time.Second
+	WriteTimeout    time.Duration = 5 * time.Second
+	ShutdownTimeout time.Duration = 5 * time.Second
+	Debug           bool          = true
 
-		// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-		DB 				string 			= "file:./wasa.db?_foreign_keys=on"
-
+	// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
+	DB string = "file:./wasa.db?_foreign_keys=on"
 )
 
 // main is the program entry point. The only purpose of this function is to call run() and set the exit code if there is
@@ -72,6 +71,7 @@ func main() {
 // * waits for any termination event: SIGTERM signal (UNIX), non-recoverable server error, etc.
 // * closes the principal web server
 func run() error {
+
 	// Load Configuration and defaults
 	// cfg, err := loadConfiguration()
 	// if err != nil {
@@ -114,7 +114,7 @@ func run() error {
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.Signal(0xf)) //Signal(0xf) -> SIGTERM
+	signal.Notify(shutdown, os.Interrupt, syscall.Signal(0xf)) // Signal(0xf) -> SIGTERM
 
 	// Make a channel to listen for errors coming from the listener. Use a
 	// buffered channel so the goroutine can exit if we don't collect this error.
@@ -184,7 +184,7 @@ func run() error {
 
 		// Log the status of this shutdown.
 		switch {
-		case sig == syscall.Signal(0x13):	// Signal(0x13) -> SIGSTOP
+		case sig == syscall.Signal(0x13): // Signal(0x13) -> SIGSTOP
 			return errors.New("integrity issue caused shutdown")
 		case err != nil:
 			return fmt.Errorf("could not stop server gracefully: %w", err)

@@ -1076,8 +1076,8 @@ paths:
           $ref: "#/components/responses/UnAuth401"
         "403":  
           $ref: "#/components/responses/Forbidden403"
-        # "404":  
-        #   $ref: "#/components/responses/NotFound404"
+        "404":  
+          $ref: "#/components/responses/NotFound404"
         "500":  
           $ref: "#/components/responses/InternalServerError500"
 
@@ -1131,72 +1131,6 @@ paths:
         #   $ref: "#/components/responses/NotFound404"
         "500":  
           $ref: "#/components/responses/InternalServerError500"
-
-####################################################################################################################
-  # /users/{user-id}/posts/{post-id}/hashtags/:
-  #   parameters:
-  #     - $ref: "#/components/parameters/userID"
-  #     - $ref: "#/components/parameters/postID"
-  #   put:
-  #     tags: [Hashtag]
-  #     operationId: addHashtags
-  #     summary: Add an array of hashtags to a post.
-  #     description: |-
-  #       This adds an array of hashtags to a post.
-  #       Hashtag can be added to any post through this endpoint after the post has been posted, or by adding the hashtag directly when posting the posts.
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: array
-  #             items:
-  #               $ref: "#/components/schemas/hashtag"
-  #     responses:
-  #       "201":
-  #         description: Comment created successfully
-  #         content:
-  #           application/json:
-  #             schema:   
-  #               $ref: "#/components/schemas/hashtags"
-  #       "204":  
-  #         $ref: "#/components/responses/NoContent204"
-  #       "400":  
-  #         $ref: "#/components/responses/BadRequest400"
-  #       "401":  
-  #         $ref: "#/components/responses/UnAuth401"
-  #       "403":  
-  #         $ref: "#/components/responses/Forbidden403"
-  #       "404":  
-  #         $ref: "#/components/responses/NotFound404"
-  #       "500":  
-  #         $ref: "#/components/responses/InternalServerError500" 
-  #   delete:
-  #     tags: [Hashtag]
-  #     operationId: deleteHashtags
-  #     summary: Deletes an array of hashtag on a given post.
-  #     description: |-
-  #       This simply deletes the specified hashtags.
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: array
-  #             items:
-  #               $ref: "#/components/schemas/hashtag"
-  #     responses:
-  #       "204":  
-  #         $ref: "#/components/responses/NoContent204"
-  #       "400":  
-  #         $ref: "#/components/responses/BadRequest400"
-  #       "401":  
-  #         $ref: "#/components/responses/UnAuth401"
-  #       "403":  
-  #         $ref: "#/components/responses/Forbidden403"
-  #       "404":  
-  #         $ref: "#/components/responses/NotFound404"
-  #       "500":  
-  #         $ref: "#/components/responses/InternalServerError500"
-####################################################################################################################
 
   /posts/{post-id}/hashtags/:
     parameters:
@@ -1369,66 +1303,6 @@ paths:
           $ref: "#/components/responses/NotFound404"
         "500":  
           $ref: "#/components/responses/InternalServerError500"
-
-  # /posts/{post-id}/comments/{user-id}:    # it's above
-  #   parameters:
-  #     - $ref: "#/components/parameters/postID"
-  #     - $ref: "#/components/parameters/userID"
-  #   post:
-  #     tags: [Comments]
-  #     operationId: commentPhoto #commentPost
-  #     summary: Places a new comment and returns the newly created comment ID.
-  #     description: |-
-  #       Posts a new \"comment\" on the given post ID by the given user.
-  #       The server will create a new unique ID, the client can find it in the response.
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:   
-  #             $ref: '#/components/schemas/message'
-  #     responses:
-  #       "201":
-  #         description: Comment created successfully
-  #         content:
-  #           application/json:
-  #             schema:   
-  #               $ref: '#/components/schemas/ID'
-  #       "400":  
-  #         $ref: "#/components/responses/BadRequest400"
-  #       "401":  
-  #         $ref: "#/components/responses/UnAuth401"
-  #       "403":  
-  #         $ref: "#/components/responses/Forbidden403"
-  #       "404":  
-  #         $ref: "#/components/responses/NotFound404"
-  #       "500":  
-  #         $ref: "#/components/responses/InternalServerError500"
-
-# endpoint mod
-  # /users/{user-id}/comments/{comment-id}:   # it's below.
-  #   parameters:
-  #     - $ref: "#/components/parameters/commentID"
-  #     - $ref: "#/components/parameters/userID"
-  #   delete:
-  #     tags: [Comments]
-  #     operationId: uncommentPhoto   #uncommentPost
-  #     summary: Deletes a given comment by the given user.
-  #     description: |-
-  #       Deletes a given comment by the given user. The user is either the one who placed the comment or on whose post the comment was placed.
-  #     responses:
-  #       "204":  
-  #         $ref: "#/components/responses/NoContent204"
-  #       "400":  
-  #         $ref: "#/components/responses/BadRequest400"
-  #       "401":  
-  #         $ref: "#/components/responses/UnAuth401"
-  #       "403":  
-  #         $ref: "#/components/responses/Forbidden403"
-  #       "404":  
-  #         $ref: "#/components/responses/NotFound404"
-  #       "500":  
-  #         $ref: "#/components/responses/InternalServerError500"
 
   /comments/{comment-id}:
     parameters:
