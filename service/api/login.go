@@ -10,8 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-
-
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	username := r.FormValue("username")
@@ -25,17 +23,17 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
-	
+
 	ID, newtoken, valCreated, err := rt.db.DoLogin(username)
 
 	if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -43,8 +41,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Add("Authorization", "Bearer " + newtoken)
-	
+	w.Header().Add("Authorization", "Bearer "+newtoken)
+
 	if valCreated == "201" {
 		w.WriteHeader(http.StatusCreated)
 
@@ -60,11 +58,11 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
 	err = rt.db.LogOut(token)
@@ -72,13 +70,12 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 	// if errors.Is(err, structs.ErrNotFound) {
 	// 	ctx.Logger.WithError(err).Error("Token not found")
 	// 	w.WriteHeader(http.StatusNotFound)
-    //     return 
-	// } else 
+	//     return
+	// } else
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-

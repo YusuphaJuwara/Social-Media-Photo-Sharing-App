@@ -14,11 +14,11 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
 	postID := ps.ByName("post-id")
@@ -36,7 +36,7 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	comments, err := rt.db.GetPhotoComments(token, postID)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -57,23 +57,23 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	_ = json.NewEncoder(w).Encode(comments)
 }
 
-//  Places a new comment and returns the newly created comment ID.
+// Places a new comment and returns the newly created comment ID.
 func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-    	return 
+		return
 	}
 
 	postID := ps.ByName("post-id")
 	message := r.FormValue("message")
 
-	// Check the validities 
+	// Check the validities
 	err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -97,7 +97,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	commentID, err := rt.db.CommentPhoto(token, postID, message)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -124,11 +124,11 @@ func (rt *_router) getComment(w http.ResponseWriter, r *http.Request, ps httprou
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
 	commentID := ps.ByName("comment-id")
@@ -146,7 +146,7 @@ func (rt *_router) getComment(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	comment, err := rt.db.GetComment(token, commentID)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -173,11 +173,11 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
 	commentID := ps.ByName("comment-id")
@@ -195,7 +195,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	err = rt.db.UncommentPhoto(token, commentID)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)

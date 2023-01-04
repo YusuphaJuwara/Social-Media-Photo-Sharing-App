@@ -9,7 +9,6 @@ import (
 	"net/http"
 )
 
-
 // Get the like-count and the user IDs who liked the post.
 func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -18,17 +17,17 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	postID 		:= ps.ByName("post-id")
+	postID := ps.ByName("post-id")
 
 	// Check the validity of the postID
 	err = structs.UuidCheck(postID)
@@ -39,16 +38,16 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
-	like, err := rt.db.GetLikes( token, postID )
+	like, err := rt.db.GetLikes(token, postID)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -66,7 +65,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -78,7 +77,6 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	_ = json.NewEncoder(w).Encode(like)
 }
 
-
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
@@ -86,18 +84,18 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	postID 		:= ps.ByName("post-id")
+	userID := ps.ByName("user-id")
+	postID := ps.ByName("post-id")
 
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
@@ -110,7 +108,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -120,7 +118,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	err = rt.db.LikePhoto(userID, token, postID)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -144,7 +142,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -154,7 +152,6 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.WriteHeader(http.StatusNoContent)
 }
 
-
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
@@ -162,18 +159,18 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	postID 		:= ps.ByName("post-id")
+	userID := ps.ByName("user-id")
+	postID := ps.ByName("post-id")
 
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
@@ -186,7 +183,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -196,7 +193,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	err = rt.db.UnlikePhoto(userID, token, postID)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -220,7 +217,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

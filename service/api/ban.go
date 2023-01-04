@@ -14,14 +14,14 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
-	userID 		:= ps.ByName("user-id")
+	userID := ps.ByName("user-id")
 
 	// Check the validity of the userID
 	err = structs.UuidCheck(userID)
@@ -36,7 +36,7 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	bannedUserIDs, err := rt.db.GetBanUsers(userID, token)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -54,10 +54,8 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode( bannedUserIDs )
+	_ = json.NewEncoder(w).Encode(bannedUserIDs)
 }
-
-
 
 // The user with userID bans the user with banID
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -65,15 +63,15 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
-	userID 		:= ps.ByName("user-id")
-	banID 		:= ps.ByName("ban-user")
+	userID := ps.ByName("user-id")
+	banID := ps.ByName("ban-user")
 
 	// Check the validity of the userID and banID
 	for _, userid := range [...]string{userID, banID} {
@@ -90,7 +88,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	err = rt.db.BanUser(userID, banID, token)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -109,23 +107,21 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	w.WriteHeader(http.StatusNoContent)
 }
 
-
-
 // The user with userID bans the user with banID
 func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 	}
 
-	userID 		:= ps.ByName("user-id")
-	banID 		:= ps.ByName("ban-user")
+	userID := ps.ByName("user-id")
+	banID := ps.ByName("ban-user")
 
 	// Check the validity of the userID and banID
 	for _, userid := range [...]string{userID, banID} {
@@ -142,7 +138,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	err = rt.db.UnbanUser(userID, banID, token)
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)

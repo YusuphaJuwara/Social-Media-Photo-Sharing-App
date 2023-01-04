@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	APIHost         string        = ":3000"
+	APIHost string = ":3000"
 	// DebugHost       string        = ":4000"
 	ReadTimeout     time.Duration = 5 * time.Second
 	WriteTimeout    time.Duration = 5 * time.Second

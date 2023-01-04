@@ -1,4 +1,3 @@
-
 package api
 
 import (
@@ -8,12 +7,9 @@ import (
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-
 )
 
-
-
-// For each user in our database, this gets it's information. 
+// For each user in our database, this gets it's information.
 // But the user trying to get users' info cannot get those users who banned him or those whom he did not "follow" and set their profiles to private.
 func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -22,20 +18,19 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	
 	users, err := rt.db.GetAllUsers(token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -47,7 +42,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -66,13 +61,13 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -87,7 +82,7 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -96,7 +91,7 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	boolean, err := rt.db.GetPrivate(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -114,7 +109,7 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -132,12 +127,12 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -152,7 +147,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -161,7 +156,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	err = rt.db.SetPrivate(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -179,7 +174,7 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -196,13 +191,13 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -217,7 +212,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -226,7 +221,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 
 	err = rt.db.SetPublic(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authenticated")
 
@@ -244,7 +239,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -261,13 +256,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -282,16 +277,16 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
-	
+
 	user, err := rt.db.GetUserProfile(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -308,8 +303,8 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		w.WriteHeader(http.StatusNotFound)
 		return
 
-	}else if err != nil {
-		
+	} else if err != nil {
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -328,13 +323,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -349,34 +344,33 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
-	profilename 	:= r.FormValue("profile-name")
-	profilemessage 	:= r.FormValue("profile-message")
-	gender 			:= r.FormValue("gender")
-	birthdate 		:= r.FormValue("birth-date")
+	profilename := r.FormValue("profile-name")
+	profilemessage := r.FormValue("profile-message")
+	gender := r.FormValue("gender")
+	birthdate := r.FormValue("birth-date")
 
 	// If all four are empty, reject it
 	if profilename == "" && profilemessage == "" && gender == "" && birthdate == "" {
 
 		ctx.Logger.WithError(err).Error("At least one field must not be empty")
-        w.WriteHeader(http.StatusBadRequest)
-        return
+		w.WriteHeader(http.StatusBadRequest)
+		return
 
-    }
+	}
 
 	// _ = json.NewDecoder(r.Body).Decode(userProf)
 	userProf := structs.ProfileDetail{
-        ProfileName:         profilename,
-        ProfileMessage:     profilemessage,
-        Gender:             gender,
-        BirthDate:         birthdate,
-
+		ProfileName:    profilename,
+		ProfileMessage: profilemessage,
+		Gender:         gender,
+		BirthDate:      birthdate,
 	}
 
 	// Check the validities for the ones that are not empty
@@ -389,14 +383,14 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
 		}
 	}
-	
+
 	if profilemessage != "" {
 		err = structs.PatternCheck(structs.MessagePattern, profilemessage, structs.MessageMinLen, structs.MessageMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
@@ -406,7 +400,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -416,7 +410,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	if gender != "" {
 		err = structs.GenderCheck(gender)
-		if err  != nil {
+		if err != nil {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user gender format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -434,7 +428,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -444,7 +438,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	valCreated, err := rt.db.UpdateUserProfile(userID, token, &userProf)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -462,7 +456,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -471,7 +465,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	if valCreated == "204" {
 		w.WriteHeader(http.StatusNoContent)
-		return 
+		return
 
 	}
 
@@ -488,13 +482,13 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -509,16 +503,16 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
-	
+
 	err = rt.db.DeleteUser(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -535,8 +529,8 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusForbidden)
 		return
 
-	}else if err != nil {
-		
+	} else if err != nil {
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -553,13 +547,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -574,14 +568,14 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
-	username 	:= r.FormValue("username")
+	username := r.FormValue("username")
 
 	// Check the validity of the username
 	err = structs.PatternCheck(structs.UsernamePattern, username, structs.UsernameMinLen, structs.UsernameMaxLen)
@@ -592,7 +586,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -601,7 +595,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	err = rt.db.SetMyUserName(userID, token, username)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -619,7 +613,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

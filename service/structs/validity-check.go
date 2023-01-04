@@ -2,14 +2,13 @@ package structs
 
 import (
 	"errors"
-	_"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 )
 
-func TokenCheck( r *http.Request) (string, error) {
+func TokenCheck(r *http.Request) (string, error) {
 	prefix := "Bearer "
 
 	// If the header doesn't contain Authorization, it returns an empty string ""
@@ -24,8 +23,8 @@ func TokenCheck( r *http.Request) (string, error) {
 	// }
 
 	err := UuidCheck(reqToken)
-	
-	if err == nil{
+
+	if err == nil {
 		return reqToken, nil
 	} else if errors.Is(err, ErrBadReq) {
 		return "", ErrBadReq
@@ -88,13 +87,13 @@ func DateTimeCheck(pattern, date string) error {
 		return ErrBadReq
 	}
 
-	datetimelayout 	:= "2006-01-02T15:04:05.000Z"
-	datelayout 		:= "2006-01-02"
+	datetimelayout := "2006-01-02T15:04:05.000Z"
+	datelayout := "2006-01-02"
 	_, err1 := time.Parse(datetimelayout, date)
 	_, err2 := time.Parse(datelayout, date)
 
 	if err1 != nil && err2 != nil {
-        return err1
+		return err1
 	}
 
 	return nil

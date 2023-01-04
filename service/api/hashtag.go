@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-
-
 // return "204" if hashtag already exists, else "201".
 func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -19,19 +17,19 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	postID 		:= ps.ByName("post-id")
-	hashtag 	:= ps.ByName("hashtag")
+	userID := ps.ByName("user-id")
+	postID := ps.ByName("post-id")
+	hashtag := ps.ByName("hashtag")
 
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
@@ -43,7 +41,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -60,7 +58,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -69,7 +67,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 	valCreated, err := rt.db.AddHashtag(userID, token, postID, hashtag)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -87,7 +85,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -96,7 +94,7 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 
 	if valCreated == "204" {
 		w.WriteHeader(http.StatusNoContent)
-		return 
+		return
 
 	}
 
@@ -112,19 +110,19 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	postID 		:= ps.ByName("post-id")
-	hashtag 	:= ps.ByName("hashtag")
+	userID := ps.ByName("user-id")
+	postID := ps.ByName("post-id")
+	hashtag := ps.ByName("hashtag")
 
 	// Check the validity of the userID and postID
 	for _, id := range [...]string{userID, postID} {
@@ -136,7 +134,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -153,7 +151,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -162,7 +160,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 
 	err = rt.db.DeleteHashtag(userID, token, postID, hashtag)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -180,7 +178,7 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -190,7 +188,6 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 	w.WriteHeader(http.StatusNoContent)
 }
 
-
 func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
@@ -198,17 +195,17 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	postID 	:= ps.ByName("post-id")
+	postID := ps.ByName("post-id")
 
 	// Check the validity of the postID
 	err = structs.UuidCheck(postID)
@@ -219,7 +216,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -228,7 +225,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 
 	hashtags, err := rt.db.GetPostHashtags(token, postID)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -246,7 +243,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

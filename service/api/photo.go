@@ -21,13 +21,13 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -42,7 +42,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -51,7 +51,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 	photoID, err := rt.db.GetUserProfilePicture(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -69,7 +69,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -77,35 +77,33 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	}
 
 	if photoID == "" {
-		w.WriteHeader(http.StatusNotFound)		// --
+		w.WriteHeader(http.StatusNotFound) // --
 		_, _ = w.Write([]byte("The user does not yet have a profile photo"))
-        return
+		return
 
 	}
 
 	// Retrive the photo and send it.
-	file := filepath.Join("./pictures", photoID + ".png")
+	file := filepath.Join("./pictures", photoID+".png")
 
 	img, err := os.Open(file)
 
 	// if errors.Is(err, os.ErrNotExist) {
-    if err != nil {
-        ctx.Logger.WithError(err).Error("Error reading the file")
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error reading the file")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
-    }
+	}
 
-    defer img.Close()
+	defer img.Close()
 
-    w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
 
-    _, _ = io.Copy(w, img)
-	
+	_, _ = io.Copy(w, img)
+
 }
-
-
 
 func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -114,13 +112,13 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -135,7 +133,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -144,7 +142,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	err = rt.db.GetSinglePhoto(photoID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -162,7 +160,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -172,31 +170,29 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 	// if photoID == "" {
 	// 	w.WriteHeader(http.StatusNotFound)		// --
 	// 	_, _ = w.Write([]byte("No such Photo"))
-    //     return
+	//     return
 
 	// }
 
 	// Retrieve the photo and send it.
-	file := filepath.Join("./pictures", photoID + ".png")
+	file := filepath.Join("./pictures", photoID+".png")
 
 	img, err := os.Open(file)
 
 	// if errors.Is(err, os.ErrNotExist) {
-    if err != nil {
-        ctx.Logger.WithError(err).Error("Error reading the file")
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error reading the file")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
-    }
+	}
 
-    defer img.Close()
+	defer img.Close()
 
-    w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
-    _, _ = io.Copy(w, img)
+	_, _ = io.Copy(w, img)
 }
-
-
 
 func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -205,13 +201,13 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -226,7 +222,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -235,7 +231,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	photoID, valCreated, err := rt.db.ChangeUserProfilePicture(userID, token, r)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -253,7 +249,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -262,7 +258,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	if valCreated == "204" {
 		w.WriteHeader(http.StatusNoContent)
-        return
+		return
 
 	}
 
@@ -271,8 +267,6 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 	_ = json.NewEncoder(w).Encode(photoID)
 }
 
-
-
 func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	token, err := structs.TokenCheck(r)
@@ -280,13 +274,13 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -301,7 +295,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -310,7 +304,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	err = rt.db.DeleteUserProfilePicture(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -328,7 +322,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

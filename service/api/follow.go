@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-
-
 // First slice with user followers' IDs and second slice with user followings' IDs
 func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
@@ -19,13 +17,13 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
@@ -40,7 +38,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -49,7 +47,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	FollowerIDs, FollowingIDs, err := rt.db.GetUserFollows(userID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -67,7 +65,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -75,14 +73,13 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	follows := structs.Follow{
-		FollowerIDs: FollowerIDs,
-        FollowingIDs: FollowingIDs,
+		FollowerIDs:  FollowerIDs,
+		FollowingIDs: FollowingIDs,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(follows)
-
 
 }
 
@@ -94,18 +91,18 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	followID 	:= ps.ByName("follow-id")
+	userID := ps.ByName("user-id")
+	followID := ps.ByName("follow-id")
 
 	// Check the validity of the userID and followID
 	for _, userid := range [...]string{userID, followID} {
@@ -118,7 +115,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -128,7 +125,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	err = rt.db.FollowUser(userID, followID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -152,7 +149,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -170,18 +167,18 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 		ctx.Logger.WithError(err).Error("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
-        return 
+		return
 
 	} else if err != nil {
 
 		ctx.Logger.WithError(err).Error("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
-        return 
+		return
 
 	}
 
-	userID 		:= ps.ByName("user-id")
-	followID 	:= ps.ByName("follow-id")
+	userID := ps.ByName("user-id")
+	followID := ps.ByName("follow-id")
 
 	// Check the validity of the userID and followID
 	for _, userid := range [...]string{userID, followID} {
@@ -194,7 +191,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 			return
 
 		} else if err != nil {
-			
+
 			ctx.Logger.WithError(err).Error("Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -204,7 +201,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 
 	err = rt.db.UnfollowUser(userID, followID, token)
 
-	if errors.Is(err, structs.ErrUnAuth ) {
+	if errors.Is(err, structs.ErrUnAuth) {
 
 		ctx.Logger.WithError(err).Error("User Not Authorized")
 
@@ -228,7 +225,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 
 	} else if err != nil {
-		
+
 		ctx.Logger.WithError(err).Error("Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return

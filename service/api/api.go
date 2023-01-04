@@ -38,13 +38,10 @@ package api
 
 import (
 	"errors"
+	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	_"database/sql"
-	_"fmt"
-	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
-	_"github.com/gofrs/uuid"
 )
 
 // Config is used to provide dependencies and configuration to the New function.
