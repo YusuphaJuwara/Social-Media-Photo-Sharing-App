@@ -863,7 +863,7 @@ paths:
       tags: [Post]
       #I prefer calling it getPost because I upload a photo with hashtags, captions, etc instead of just a photo. 
       #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
-      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      #But following the project's specs, I will use the operation Id keys specified in the project's specification.
       operationId: getPhoto
       summary: Get the post, given the post ID.
       description: |-
@@ -957,7 +957,7 @@ paths:
       tags: [Post]
       #I prefer calling it getUserPosts because I get a photo with hashtags, captions, date and time posted, etc instead of just a photo. 
       #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
-      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      #But following the project's specs, I will use the operation Id keys specified in the project's specification.
       operationId: getUserPhotos
       summary: Get the list of posts posted by the given user.
       description: |-
@@ -988,7 +988,7 @@ paths:
       tags: [Post]
       #I prefer calling it uploadPost because I upload a photo with hashtags, captions, etc instead of just a photo. 
       #So what the prof refers to as photo, is my post (photo with hashtags, captions, etc). 
-      #But following the project's specs, I will use the operationId keys specified in the project's specification.
+      #But following the project's specs, I will use the operation Id keys specified in the project's specification.
       operationId: uploadPhoto
       summary: Create a new Post by the given user and returns the newly created post ID.
       description: |-
