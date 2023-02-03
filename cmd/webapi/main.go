@@ -28,17 +28,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api"
-	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
-	_ "github.com/ardanlabs/conf"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/sirupsen/logrus"
 	_ "math/rand"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api"
+	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
+	_ "github.com/ardanlabs/conf"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -51,6 +52,8 @@ const (
 
 	// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
 	DB string = "file:./wasa.db?_foreign_keys=on"
+
+	folder = "./pictures"
 )
 
 // main is the program entry point. The only purpose of this function is to call run() and set the exit code if there is
@@ -91,6 +94,20 @@ func run() error {
 	}
 
 	logger.Infof("application initializing")
+
+	logger.Println("If the pictures folder does not exist, create it")
+	err := os.MkdirAll(folder, os.ModeDir)
+	if err != nil {
+
+		// If path is already a directory, MkdirAll does nothing and returns nil.
+		// if !os.IsExist(err) {
+		// 	logger.WithError(err).Error("error regarding the pictures folder")
+		// 	return fmt.Errorf("error creating/checking pictures folder: %w", err)
+		// }
+
+		logger.WithError(err).Error("error regarding the pictures folder")
+		return fmt.Errorf("error creating pictures folder: %w", err)
+	}
 
 	logger.Println("initializing database support")
 	dbconn, err := sql.Open("sqlite3", DB)
