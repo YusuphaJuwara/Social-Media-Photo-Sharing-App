@@ -391,7 +391,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	}
 
-	// file := filepath.Join("./pictures", photoID + ".png")
+	// file := filepath.Join(structs.PicFolder, photoID + ".png")
 
 	// Create creates or truncates the named file. If the file already exists, it is truncated.
 	// If the file does not exist, it is created with mode 0666 (before umask).
@@ -591,7 +591,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// }
 
-	// file := filepath.Join("./pictures", photoID + ".png")
+	// file := filepath.Join(structs.PicFolder, photoID + ".png")
 
 	// err = os.Remove(file)
 	// if err != nil {

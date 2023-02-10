@@ -10,6 +10,7 @@ Here, I define some general constants needed throughout the project.
 import "errors"
 
 var (
+	PicFolder 	 = "/tmp/pictures"
 	ErrUnAuth    = errors.New("unauthorized user")
 	ErrForbidden = errors.New("forbidden")
 	ErrNotFound  = errors.New("not found")
@@ -21,8 +22,8 @@ const (
 	UserS = `CREATE TABLE IF NOT EXISTS user (
 		id TEXT NOT NULL PRIMARY KEY, 
 		username TEXT NOT NULL, 
-        private INT DEFAULT 0,
-		profilename TEXT DEFAULT '', 
+    private INT DEFAULT 0,
+		profilename TEXT DEFAULT 'Bassetti Enrico', 
 		profilemessage TEXT DEFAULT '',
 		gender TEXT DEFAULT '', 
 		birthdate text DEFAULT '',

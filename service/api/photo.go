@@ -84,7 +84,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Retrive the photo and send it.
-	file := filepath.Join("./pictures", photoID+".png")
+	file := filepath.Join(structs.PicFolder, photoID+".png")
 
 	img, err := os.Open(file)
 
@@ -175,7 +175,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 	// }
 
 	// Retrieve the photo and send it.
-	file := filepath.Join("./pictures", photoID+".png")
+	file := filepath.Join(structs.PicFolder, photoID+".png")
 
 	img, err := os.Open(file)
 

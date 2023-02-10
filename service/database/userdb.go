@@ -459,7 +459,7 @@ func (db *appdbimpl) DeleteUser(userID, token string) error {
 			continue
 		}
 
-		file := filepath.Join("./pictures", photoID+".png")
+		file := filepath.Join(structs.PicFolder, photoID+".png")
 		err = os.Remove(file)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
@@ -611,7 +611,7 @@ func updateProfPic(photoID string, r *http.Request) error {
 		return err
 	}
 
-	file := filepath.Join("./pictures", photoID+".png")
+	file := filepath.Join(structs.PicFolder, photoID+".png")
 
 	// Create creates or truncates the named file. If the file already exists, it is truncated.
 	// If the file does not exist, it is created with mode 0666 (before umask).
@@ -665,7 +665,7 @@ func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
 		return nil
 	}
 
-	file := filepath.Join("./pictures", photoID+".png")
+	file := filepath.Join(structs.PicFolder, photoID+".png")
 
 	err = os.Remove(file)
 	if err != nil {
@@ -1416,7 +1416,7 @@ func (db *appdbimpl) DeletePhoto(userID, token, postID string) error {
 	}
 
 	if photoID != "" {
-		file := filepath.Join("./pictures", photoID+".png")
+		file := filepath.Join(structs.PicFolder, photoID+".png")
 		err = os.Remove(file)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {

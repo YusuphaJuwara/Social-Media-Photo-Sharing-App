@@ -18,7 +18,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	err := structs.PatternCheck(structs.UsernamePattern, username, structs.UsernameMinLen, structs.UsernameMaxLen)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the username format")
+		ctx.Logger.WithError(err).Errorf("Bad Request Error for the username format: %s", username)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
