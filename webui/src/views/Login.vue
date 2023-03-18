@@ -27,8 +27,8 @@ export default {
 					//this.token = response.headers.Authorization.split(" ")[1];
 					//this.userid = JSON.parse(response.data);
 
-					confirm("Auth header: "+response.headers.Authorization +".\n"+this.username +".\n"+response.data);
-
+					confirm("Auth header: "+response.headers+"['Authorization']" +".\n"+this.username +".\n"+response.data);
+					console.log(response);
 					// the data is globally available to all 
 					// use sessionStorage if ...
 					// localStorage.setItem('token', this.token);
