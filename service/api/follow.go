@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 // First slice with user followers' IDs and second slice with user followings' IDs
@@ -30,7 +31,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -105,9 +106,15 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	followID := ps.ByName("follow-id")
 
 	// Check the validity of the userID and followID
-	for _, userid := range [...]string{userID, followID} {
+	for idx, userid := range [...]string{userID, followID} {
 
-		err = structs.UuidCheck(userid)
+		uid, err := structs.UuidCheck(userid)
+		if idx == 0 {
+			userID = uid
+		} else {
+			followID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -181,9 +188,15 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	followID := ps.ByName("follow-id")
 
 	// Check the validity of the userID and followID
-	for _, userid := range [...]string{userID, followID} {
+	for idx, userid := range [...]string{userID, followID} {
 
-		err = structs.UuidCheck(userid)
+		uid, err := structs.UuidCheck(userid)
+		if idx == 0 {
+			userID = uid
+		} else {
+			followID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")

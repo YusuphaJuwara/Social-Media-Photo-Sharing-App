@@ -24,7 +24,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -34,14 +34,14 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Add("Authorization", "Bearer "+newtoken)
+	w.Header().Set("content-type", "application/json")
+	w.Header().Add("authorization", "Bearer "+newtoken)
 
 	if valCreated == "201" {
 		w.WriteHeader(http.StatusCreated)
@@ -56,11 +56,11 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Errorf("Token Error: %w \n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -73,7 +73,7 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 	//     return
 	// } else
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

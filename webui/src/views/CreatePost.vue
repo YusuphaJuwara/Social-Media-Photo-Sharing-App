@@ -1,38 +1,3 @@
-<template>
-	<div>
-		<div
-			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">New Post</h1>
-		</div>
-
-		<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
-
-		<LoadingSpinner v-if="loading"></LoadingSpinner>
-
-    <!--form @submit.prevent="submitForm"-->
-    <div class="mb-3">
-      <label for="picture">Picture:</label>
-      <input type="file" id="picture" @change="uploadPicture" ref="pictureInput" accept="image/png"/>
-      <div v-if="pictureError" class="error">Please select a PNG file</div>
-    </div>
-    <div class="mb-3">
-      <label for="caption" class="form-label">Caption:</label>
-      <textarea id="caption" class="form-control" v-model="form.caption" @mouseover="showHint('caption')"></textarea>
-    </div>
-    <div class="mb-3">
-      <label for="hashtags" class="form-label">Hashtags:</label>
-      <textarea id="hashtags" class="form-control" v-model="form.hashtags" @mouseover="showHint('hashtags')"></textarea>
-    </div>
-    <div>
-      <button v-if="!loading" :disabled="!isValid" type="button" class="btn btn-primary" @click="uploadPhoto">
-      Create Post
-      </button>
-    </div>
-    <!--/form-->
-    <div v-if="hint" class="hint">{{ hint }}</div>
-  </div>
-</template>
-
 <style>
   .error {
     color: red;
@@ -47,8 +12,8 @@
 export default {
   data() {
     return {
-      token: '',
-      userid: '',
+      userid: localStorage.getItem('userid'),
+      token: localStorage.getItem('token'),
       errormsg: null,
 			loading: false,
       form: {
@@ -104,9 +69,9 @@ export default {
         formData.append('caption', this.form.caption);
         formData.append('hashtags', hashtags);
 
-        const response = await axios.post("/users/"+this.userid+"/posts/", formData, {
+        const response = await this.$axios.post("/users/"+this.userid+"/posts/", formData, {
           headers: {
-            'Authorization': 'Bearer ' + this.token,
+            // 'Authorization': 'Bearer ' + this.token,
             'Content-Type': 'multipart/form-data'
           }
         });
@@ -122,9 +87,47 @@ export default {
     },
 
   },
+  beforeCreate() {
+    // Initialize variables here
+    this.userid = localStorage.getItem('userid');
+    this.token = localStorage.getItem('token');
+  },
   mounted() {
-    this.userid = localStorage.getItem('userid')
-    this.token = localStorage.getItem('token')
   },
 };
 </script>
+
+<template>
+	<div>
+		<div
+			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+			<h1 class="h2">New Post</h1>
+		</div>
+
+		<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+
+		<LoadingSpinner v-if="loading"></LoadingSpinner>
+
+    <!--form @submit.prevent="submitForm"-->
+    <div class="mb-3">
+      <label for="picture">Picture:</label>
+      <input type="file" id="picture" @change="uploadPicture" ref="pictureInput" accept="image/png"/>
+      <div v-if="pictureError" class="error">Please select a PNG file</div>
+    </div>
+    <div class="mb-3">
+      <label for="caption" class="form-label">Caption:</label>
+      <textarea id="caption" class="form-control" v-model="form.caption" @mouseover="showHint('caption')"></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="hashtags" class="form-label">Hashtags:</label>
+      <textarea id="hashtags" class="form-control" v-model="form.hashtags" @mouseover="showHint('hashtags')"></textarea>
+    </div>
+    <div>
+      <button v-if="!loading" :disabled="!isValid" type="button" class="btn btn-primary" @click="uploadPhoto">
+      Create Post
+      </button>
+    </div>
+    <!--/form-->
+    <div v-if="hint" class="hint">{{ hint }}</div>
+  </div>
+</template>

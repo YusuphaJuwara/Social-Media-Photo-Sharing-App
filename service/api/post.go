@@ -32,7 +32,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the postID
-	err = structs.UuidCheck(postID)
+	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -129,7 +129,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Errorf("Token Error: %s", r.Header.Get("authorization"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -144,10 +144,10 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the userID
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Errorf("Bad Request Error for the user-id format: %s", userID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -186,7 +186,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(posts)
 }
@@ -197,7 +197,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("Token Error: " + r.Header.Get("authorization"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -212,7 +212,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the userID
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -280,7 +280,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the userID
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -332,7 +332,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error format")
+			ctx.Logger.WithError(err).Error("Bad Request Error format for the caption")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
@@ -350,7 +350,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 			if errors.Is(err, structs.ErrBadReq) {
 
-				ctx.Logger.WithError(err).Error("Bad Request Error format")
+				ctx.Logger.WithError(err).Error("Bad Request Error format for the hashtag")
 				w.WriteHeader(http.StatusBadRequest)
 				return
 
@@ -452,8 +452,14 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	caption := r.FormValue("message")
 
 	// Check the validities
-	for _, id := range [...]string{userID, postID} {
-		err = structs.UuidCheck(id)
+	for idx, id := range [...]string{userID, postID} {
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error format")
@@ -535,8 +541,14 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	postID := ps.ByName("post-id")
 
 	// Check the validities
-	for _, id := range [...]string{userID, postID} {
-		err = structs.UuidCheck(id)
+	for idx, id := range [...]string{userID, postID} {
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error format")

@@ -35,8 +35,8 @@
 export default {
 	data: function () {
 		return {
-      token: null,
-      userid: null,
+      token: localStorage.getItem('token'),
+      userid: localStorage('userid'),
 			hashtags: '',
 			caption: '',
 			highlightProfile: false,
@@ -295,11 +295,14 @@ export default {
 		like = !like
 
   },
+	beforeCreate() {
+    // Initialize variables here
+    this.userid = localStorage.getItem('userid');
+    this.token = localStorage.getItem('token');
+  },
   mounted() {
 		this.getPhoto()
     this.postid = this.$route.params.postid
-    this.userid = localStorage.getItem('userid')
-    this.token = localStorage.getItem('token')
 	},
 
 }

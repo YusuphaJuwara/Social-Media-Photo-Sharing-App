@@ -36,8 +36,8 @@
 export default {
 	data: function () {
 		return {
-			token: null,
-			userid: null,
+			token: localStorage.getItem('token'),
+			userid: localStorage.getItem('userid'),
 			name_hashtag: "",
 			highlightProfile: false,
 			errormsg: null,
@@ -47,9 +47,9 @@ export default {
 		}
 	},
 	methods: {
-		load() {
-			return load
-		},
+		// load() {
+		// 	return load
+		// },
 		async logOut() {
 			this.loading = true;
 			this.errormsg = null;
@@ -158,10 +158,13 @@ export default {
 			return photo;
 		},
   },
+	beforeCreate() {
+    // Initialize variables here
+    this.userid = localStorage.getItem('userid');
+    this.token = localStorage.getItem('token');
+  },
 	mounted() {
 		this.search()
-		this.userid = localStorage.getItem('userid')
-    this.token = localStorage.getItem('token')
 	}
 }
 

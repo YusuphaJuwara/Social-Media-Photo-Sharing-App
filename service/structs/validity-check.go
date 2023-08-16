@@ -3,16 +3,19 @@ package structs
 import (
 	"errors"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TokenCheck(r *http.Request) (string, error) {
 	prefix := "Bearer "
 
 	// If the header doesn't contain Authorization, it returns an empty string ""
-	authHeader := r.Header.Get("Authorization")
+	authHeader := r.Header.Get("authorization")
 	reqToken := strings.TrimPrefix(authHeader, "\"")
 	reqToken = strings.TrimPrefix(reqToken, prefix)
 	reqToken = strings.TrimSuffix(reqToken, "\"")
@@ -22,7 +25,7 @@ func TokenCheck(r *http.Request) (string, error) {
 	// 	return nil, ErrBadReq
 	// }
 
-	err := UuidCheck(reqToken)
+	reqToken, err := UuidCheck(reqToken)
 
 	if err == nil {
 		return reqToken, nil
@@ -33,21 +36,31 @@ func TokenCheck(r *http.Request) (string, error) {
 	return "", err
 }
 
-func UuidCheck(uid string) error {
+func UuidCheck(uid string) (string, error) {
+
+	///////////////////////////////////
+	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
+	logger.SetLevel(logrus.InfoLevel)
+	logger.Printf("UUID before: %s \n", uid)
+	///////////////////////////////////
+
 	uid = strings.TrimPrefix(uid, "\"")
 	uid = strings.TrimSuffix(uid, "\"")
+	logger.Printf("UUID after: %s \n", uid)
 
 	pattern := "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
 	match, err := regexp.MatchString(pattern, uid)
+	logger.Printf("UUID match: %b \t %w \n", match, err)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if len(uid) != 36 || !match {
-		return ErrBadReq
+		return "", ErrBadReq
 	}
 
-	return nil
+	return uid, nil
 }
 
 func GenderCheck(str string) error {

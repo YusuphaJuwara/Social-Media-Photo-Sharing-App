@@ -24,17 +24,24 @@ export default {
 					let response = await this.$axios.post("/session", formData);
 
 					let statusCode = response.status;
-					//this.token = response.headers.Authorization.split(" ")[1];
-					//this.userid = JSON.parse(response.data);
+  				this.token = response.headers['authorization']
+					this.userid = response.data;
 
-					confirm("Auth header: "+response.headers+"['Authorization']" +".\n"+this.username +".\n"+response.data);
 					console.log(response);
 					// the data is globally available to all 
 					// use sessionStorage if ...
-					// localStorage.setItem('token', this.token);
-					// localStorage.setItem('userid', this.userid);
-					localStorage.setItem('token', "d73288c7-9796-4e75-9aa0-bd6147045f40");
-					localStorage.setItem('userid', "fca8954a-728d-45c0-b6ba-4e1cdf2524be");
+					localStorage.setItem('token', this.token);
+					localStorage.setItem('userid', this.userid);
+
+					let t1 = localStorage.getItem('token');
+					let u1 = localStorage.getItem('userid');
+					//remove later
+					confirm("username: "+this.username+
+									"\nthis.token: "+this.token+
+									"\nthis.userid: "+this.userid+
+									"\nt1: "+t1+
+									"\nu1: "+u1);
+					////////////////////////////////////////////////
 
 					if (statusCode == 201) { 
 						confirm("You have successfully logged in! Please setup your profile details.\n" +
@@ -55,7 +62,7 @@ export default {
 			}
 	},
 	mounted(){
-		this.doLogin();
+		//this.doLogin();
 	}
 }
 </script>
@@ -82,7 +89,7 @@ export default {
 			<div class="d-grid">
 				<label for="loginid">Username:</label>
 				<input type="text" id="loginid" v-model="username" @input="validateUsername" placeholder="Enrico204"/>
-				<button class="btn btn-primary mt-3" type="button" :disabled="!isValid" @click="doLogin">Mr.{{ username}} Button</button>
+				<button class="btn btn-primary mt-3" type="button" :disabled="!isValid" @click="doLogin">Sign in/up</button>
 			</div>
 
 		</div>

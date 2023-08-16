@@ -35,8 +35,8 @@
 export default {
 	data: function () {
 		return {
-			token: null,
-			userid: null,
+			token: localStorage.getItem('token'),
+			userid: localStorage.getItem('userid'),
 			highlightProfile: false,
 			errormsg: null,
 			loading: false,
@@ -103,6 +103,16 @@ export default {
 				let response = await this.$axios.get("/users/" + userid);
 				profileName = response.data['profile-name']
 
+				//delete later
+				/*const headersArray = [];
+					Object.entries(response.data).forEach(([key, value]) => {
+						headersArray.push(`${key}: ${value}`);
+					});
+
+				confirm("Profile name: " + profileName+"\n response.data: " + headersArray)
+				*/
+				//////////////////////////////////7
+
 				// refresh...
 				// await this.getAllUsers();
 			} catch (e) {
@@ -117,10 +127,13 @@ export default {
 			// this.$route.params.id
 		},
   },
+	beforeCreate() {
+    // Initialize variables here
+    this.userid = localStorage.getItem('userid');
+    this.token = localStorage.getItem('token');
+  },
 	mounted() {
 		this.getAllUsers()
-		this.userid = localStorage.getItem('userid')
-    this.token = localStorage.getItem('token')
 	}
 }
 
@@ -130,7 +143,7 @@ export default {
 	<div>
 		<div
 			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">{{ getProfileName(userid) }}'s getAllUsers excluding 'ban' and ....</h1>
+			<h1 class="h2">{{ getProfileName(userid) }}'s getAllUsers excluding 'ban' and ...</h1>
 			<div class="btn-toolbar mb-2 mb-md-0">
 				<div class="btn-group me-2">
 					<button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">

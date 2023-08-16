@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -24,7 +25,7 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the userID
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -74,8 +75,14 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	banID := ps.ByName("ban-user")
 
 	// Check the validity of the userID and banID
-	for _, userid := range [...]string{userID, banID} {
-		err = structs.UuidCheck(userid)
+	for idx, userid := range [...]string{userID, banID} {
+		uid, err := structs.UuidCheck(userid)
+		if idx == 0 {
+			userID = uid
+		} else {
+			banID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 			w.WriteHeader(http.StatusBadRequest)
@@ -124,8 +131,14 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	banID := ps.ByName("ban-user")
 
 	// Check the validity of the userID and banID
-	for _, userid := range [...]string{userID, banID} {
-		err = structs.UuidCheck(userid)
+	for idx, userid := range [...]string{userID, banID} {
+		uid, err := structs.UuidCheck(userid)
+		if idx == 0 {
+			userID = uid
+		} else {
+			banID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 			w.WriteHeader(http.StatusBadRequest)

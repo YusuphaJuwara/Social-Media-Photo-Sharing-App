@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 // Get the like-count and the user IDs who liked the post.
@@ -30,7 +31,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the postID
-	err = structs.UuidCheck(postID)
+	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -98,9 +99,15 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the userID and postID
-	for _, id := range [...]string{userID, postID} {
+	for idx, id := range [...]string{userID, postID} {
 
-		err = structs.UuidCheck(id)
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -173,9 +180,15 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the userID and postID
-	for _, id := range [...]string{userID, postID} {
+	for idx, id := range [...]string{userID, postID} {
 
-		err = structs.UuidCheck(id)
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")

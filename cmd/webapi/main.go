@@ -33,27 +33,28 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
+	_ "time"
 
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
+	"github.com/ardanlabs/conf"
 	_ "github.com/ardanlabs/conf"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	APIHost string = ":3000"
-	// DebugHost       string        = ":4000"
-	ReadTimeout     time.Duration = 5 * time.Second
-	WriteTimeout    time.Duration = 5 * time.Second
-	ShutdownTimeout time.Duration = 5 * time.Second
-	Debug           bool          = true
+// const (
+// 	APIHost string = ":3000"
+// 	// DebugHost       string        = ":4000"
+// 	ReadTimeout     time.Duration = 5 * time.Second
+// 	WriteTimeout    time.Duration = 5 * time.Second
+// 	ShutdownTimeout time.Duration = 5 * time.Second
+// 	Debug           bool          = true
 
-	// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-	DB string = "file:./wasa.db?_foreign_keys=on"
-)
+// 	// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
+// 	DB string = "file:./wasa.db?_foreign_keys=on"
+// )
 
 // main is the program entry point. The only purpose of this function is to call run() and set the exit code if there is
 // any error
@@ -75,18 +76,18 @@ func main() {
 func run() error {
 
 	// Load Configuration and defaults
-	// cfg, err := loadConfiguration()
-	// if err != nil {
-	// 	if errors.Is(err, conf.ErrHelpWanted) {
-	// 		return nil
-	// 	}
-	// 	return err
-	// }
+	cfg, err := loadConfiguration()
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			return nil
+		}
+		return err
+	}
 
 	// Init logging
 	logger := logrus.New()
 	logger.SetOutput(os.Stdout)
-	if Debug {
+	if cfg.Debug {
 		logger.SetLevel(logrus.DebugLevel)
 	} else {
 		logger.SetLevel(logrus.InfoLevel)
@@ -94,8 +95,8 @@ func run() error {
 
 	logger.Infof("application initializing")
 
-	logger.Println("If the pictures folder does not exist, create it")
-	err := os.MkdirAll(structs.PicFolder, os.ModeDir)
+	logger.Println("If the pictures folder does not exist, create it and put it in the structs.constant.go file in the service folder.\n E.g., picFolder=/tmp/pictures")
+	err = os.MkdirAll(structs.PicFolder, os.ModeDir)
 	if err != nil {
 
 		// If path is already a directory, MkdirAll does nothing and returns nil.
@@ -109,7 +110,7 @@ func run() error {
 	}
 
 	logger.Println("initializing database support")
-	dbconn, err := sql.Open("sqlite3", DB)
+	dbconn, err := sql.Open("sqlite3", cfg.DB.Filename)
 	if err != nil {
 		logger.WithError(err).Error("error opening SQLite DB")
 		return fmt.Errorf("opening SQLite: %w", err)
@@ -158,11 +159,11 @@ func run() error {
 
 	// Create the API server
 	apiserver := http.Server{
-		Addr:              APIHost,
+		Addr:              cfg.Web.APIHost,
 		Handler:           router,
-		ReadTimeout:       ReadTimeout,
-		ReadHeaderTimeout: ReadTimeout,
-		WriteTimeout:      WriteTimeout,
+		ReadTimeout:       cfg.Web.ReadTimeout,
+		ReadHeaderTimeout: cfg.Web.ReadTimeout,
+		WriteTimeout:      cfg.Web.WriteTimeout,
 	}
 
 	// Start the service listening for requests in a separate goroutine
@@ -188,7 +189,7 @@ func run() error {
 		}
 
 		// Give outstanding requests a deadline for completion.
-		ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
 		// Asking listener to shut down and load shed.

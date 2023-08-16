@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -24,7 +25,7 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the post-id
-	err = structs.UuidCheck(postID)
+	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -74,7 +75,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	message := r.FormValue("message")
 
 	// Check the validities
-	err = structs.UuidCheck(postID)
+	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -134,7 +135,7 @@ func (rt *_router) getComment(w http.ResponseWriter, r *http.Request, ps httprou
 	commentID := ps.ByName("comment-id")
 
 	// Check the validity of the comment-id
-	err = structs.UuidCheck(commentID)
+	commentID, err = structs.UuidCheck(commentID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
@@ -183,7 +184,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	commentID := ps.ByName("comment-id")
 
 	// Check the validity of the comment-id
-	err = structs.UuidCheck(commentID)
+	commentID, err = structs.UuidCheck(commentID)
 	if errors.Is(err, structs.ErrBadReq) {
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)

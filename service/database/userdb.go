@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
@@ -309,6 +310,9 @@ func (db *appdbimpl) GetUserProfile(userID, token string) (*structs.User, error)
 	} else if err != nil {
 		return nil, err
 	}
+
+	userID = strings.TrimPrefix(userID, "\"")
+	userID = strings.TrimSuffix(userID, "\"")
 
 	// If the client is banned, then for the client, the user does not exist. So return 404.
 	err = banCheck(userID, userid, db.c)

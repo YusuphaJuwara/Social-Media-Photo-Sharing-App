@@ -34,7 +34,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -125,7 +125,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 	photoID := ps.ByName("photo-id")
 
 	// Check the validity of the photo-id
-	err = structs.UuidCheck(photoID)
+	photoID, err = structs.UuidCheck(photoID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -214,7 +214,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -287,7 +287,7 @@ func (rt *_router) deleteUserProfilePicture(w http.ResponseWriter, r *http.Reque
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")

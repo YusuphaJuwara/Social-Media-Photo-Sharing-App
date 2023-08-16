@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 // return "204" if hashtag already exists, else "201".
@@ -32,8 +33,14 @@ func (rt *_router) addHashtag(w http.ResponseWriter, r *http.Request, ps httprou
 	hashtag := ps.ByName("hashtag")
 
 	// Check the validity of the userID and postID
-	for _, id := range [...]string{userID, postID} {
-		err = structs.UuidCheck(id)
+	for idx, id := range [...]string{userID, postID} {
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request format")
@@ -125,8 +132,14 @@ func (rt *_router) deleteHashtag(w http.ResponseWriter, r *http.Request, ps http
 	hashtag := ps.ByName("hashtag")
 
 	// Check the validity of the userID and postID
-	for _, id := range [...]string{userID, postID} {
-		err = structs.UuidCheck(id)
+	for idx, id := range [...]string{userID, postID} {
+		uid, err := structs.UuidCheck(id)
+		if idx == 0 {
+			userID = uid
+		} else {
+			postID = uid
+		}
+
 		if errors.Is(err, structs.ErrBadReq) {
 
 			ctx.Logger.WithError(err).Error("Bad Request format")
@@ -208,7 +221,7 @@ func (rt *_router) getPostHashtags(w http.ResponseWriter, r *http.Request, ps ht
 	postID := ps.ByName("post-id")
 
 	// Check the validity of the postID
-	err = structs.UuidCheck(postID)
+	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request format")

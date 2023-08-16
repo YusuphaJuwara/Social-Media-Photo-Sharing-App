@@ -51,8 +51,8 @@ export default {
       banUsers: [],
       user: null,
       userid: null,
-      userID: null,
-      token: null,
+      userID: localStorage.getItem('userid'),
+      token: localStorage.getItem('token'),
       clicked: false,
       hashtags: '',
       caption: '',
@@ -78,9 +78,9 @@ export default {
     }
   },
   methods: {
-    load() {
-      return load
-    },
+    // load() {
+    //   return load
+    // },
     checkImage() {
       this.selectedImage = this.$refs.image.files.length > 0;
     },
@@ -586,12 +586,14 @@ export default {
     }
     like = !like
   },
-  mounted() {
-    this.getUserPhotos()
-    this.getUserProfile()
-    this.userid = this.$route.params.userid
+  beforeCreate(){
     this.userID = localStorage.getItem('userid')
     this.token = localStorage.getItem('token')
+  },
+  mounted() {
+    //this.getUserPhotos()
+    //this.getUserProfile()
+    this.userid = this.$route.params.userid
   }
 }
 </script>
@@ -600,7 +602,7 @@ export default {
   <div>
     <div
       class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2"> {{ user['profile-name'] }}'s Photo Feed</h1>
+      <h1 class="h2"> {{ this.user['profile-name'] }}'s Photo Feed</h1>
       <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
           <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">
@@ -625,21 +627,21 @@ export default {
     <!-- Profile details card-->
     <div class="card">
       <div class="card-header text-center">
-        <img :src="getUserProfilePicture(user['user-id'])" alt="Oops!" width="150rem" height="150rem" class="rounded-circle mx-auto">
-        <h1 class="card-title mt-3 text-center">{{ user['profile-name'] }}</h1>
+        <img :src="getUserProfilePicture(this.user['user-id'])" alt="Oops!" width="150rem" height="150rem" class="rounded-circle mx-auto">
+        <h1 class="card-title mt-3 text-center">{{ this.user['profile-name'] }}</h1>
         <p class="card-text m-2 text-center">
           <span>Gender: {{ user['gender'] }}  </span>  
           <span> Birthdate: {{ user['birth-date'] }} </span>
         </p>
       </div>
       <div class="card-body">
-        <p class="card-text">{{ user['profile-message'] }}</p>
+        <p class="card-text">{{ this.user['profile-message'] }}</p>
       </div>
       <div class="card-footer justify-content-between d-grid gap-2 d-md-block">
 
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop10">Follower {{ user['follower-count'] }}</button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop10">Follower {{ this.user['follower-count'] }}</button>
 
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop11">Following {{ user['following-count'] }}</button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop11">Following {{ this.user['following-count'] }}</button>
 
         <button v-if="userID != userid" class="btn btn-primary" type="button" @click="toggleFollow()">
 					{{ !fol ? 'Follow':'Unfollow' }}
@@ -702,7 +704,7 @@ export default {
 									<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
 										@click="userDetails(uid)[0]" data-bs-dismiss="modal">
 										<img class="imgThumbNail" :src="getUserProfilePicture(uid)" />
-										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ userDetails(uid)[1] }}</h5>
+										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ this.userDetails(uid)[1] }}</h5>
 									</a>
 								</div>
 							</div>
@@ -728,7 +730,7 @@ export default {
 									<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
 										@click="userProfile(uid)" data-bs-dismiss="modal">
 										<img class="imgThumbNail" :src="userDetails(uid)[0]" />
-										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ userDetails(uid)[1] }}</h5>
+										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ this.userDetails(uid)[1] }}</h5>
 									</a>
 								</div>
 							</div>
@@ -755,7 +757,7 @@ export default {
 									<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
 										@click="unbanUser()">
 										<img class="imgThumbNail" :src="userDetails(uid)[0]" />
-										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ userDetails(uid)[1] }}</h5>
+										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ this.userDetails(uid)[1] }}</h5>
 									</a>
 								</div>
 							</div>

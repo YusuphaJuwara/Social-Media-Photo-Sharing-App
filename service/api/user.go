@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/api/reqcontext"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 // For each user in our database, this gets it's information.
@@ -50,7 +51,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Send the output to the user.
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("content-type", "application/json")
 	_ = json.NewEncoder(w).Encode(users)
 }
 
@@ -74,10 +75,10 @@ func (rt *_router) getPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Errorf("Bad Request Error for the user-id format: %s", userID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -139,10 +140,10 @@ func (rt *_router) setPrivate(w http.ResponseWriter, r *http.Request, ps httprou
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Errorf("Bad Request Error for the user-id format: %s", userID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -204,7 +205,7 @@ func (rt *_router) setPublic(w http.ResponseWriter, r *http.Request, ps httprout
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -269,7 +270,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -336,7 +337,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -495,7 +496,7 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
@@ -560,7 +561,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	userID := ps.ByName("user-id")
 
 	// Check the validity of the user-id
-	err = structs.UuidCheck(userID)
+	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
 		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
