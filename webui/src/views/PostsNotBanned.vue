@@ -50,7 +50,9 @@ export default {
 			like: false,
 			commentCount: 0,
 			likedBy: [],
-			messagetext: ''
+			messagetext: '',
+
+			profileName: ''
 		}
 	},
 	methods: {
@@ -74,7 +76,7 @@ export default {
 			this.loading = false;
 		},
     async getMyStream() {
-      this.getPhotos();
+      await this.getPhotos();
 		},
 		async getPhotos() {
 			this.loading = true;
@@ -308,20 +310,21 @@ export default {
 		// this.loading = false;
 	},
 	toggleLike(postid) {
-		if (like) {
+		if (this.like) {
 			this.unlikePhoto(postid)
 		} else {
 			this.likePhoto(postid)
 		}
-		like = !like
+		this.like = !this.like
 	},
 	beforeCreate() {
     // Initialize variables here
     this.userid = localStorage.getItem('userid');
     this.token = localStorage.getItem('token');
   },
-	mounted() {
-		this.getMyStream()
+	async mounted() {
+		await this.getMyStream()
+		this.profileName = await this.getProfileName(this.userid)
 	}
 }
 </script>
@@ -330,7 +333,7 @@ export default {
 	<div>
 		<div
 			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">{{ getProfileName(userid) }}'s Photo Feed</h1>
+			<h1 class="h2">{{ profileName }}'s Photo Feed</h1>
 			<div class="btn-toolbar mb-2 mb-md-0">
 				<div class="btn-group me-2">
 					<button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">
@@ -377,7 +380,7 @@ export default {
 						</h5>
 					</a>
 				</div>
-				<div class="header-right" v-if="userid==post['user-id']">
+				<div class="header-right" v-if="userid===post['user-id']">
 					<div class="dropdown">
 						<button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
 							aria-expanded="false">
@@ -436,7 +439,7 @@ export default {
 								<div class="card-header header-left">
 									<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
 										@click="userProfile(uid)" data-bs-dismiss="modal">
-										<img class="imgThumbNail" :src="getUserProfilePicture(l['user-id'])" />
+										<img class="imgThumbNail" :src="getUserProfilePicture(uid)" />
 										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ getProfileName(uid) }}</h5>
 									</a>
 								</div>
@@ -474,7 +477,7 @@ export default {
 								<div class="header-right">
 									<button v-if="userid==comment['user-id'] || userid==post['user-id']" data-bs-dismiss="modal"
 										@click="uncommentPhoto(comment['comment-id'])">&times</button>
-								</div>l
+								</div>
 							</div>
 							<div class="card-body">
 								<small class="text-muted"> {{ comment['date-time']}} </small> <br>

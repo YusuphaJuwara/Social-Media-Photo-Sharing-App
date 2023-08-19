@@ -10,7 +10,8 @@ Here, I define some general constants needed throughout the project.
 import "errors"
 
 var (
-	PicFolder 	 = "/tmp/pictures"
+	PicFolder = "/tmp/pictures"
+
 	ErrUnAuth    = errors.New("unauthorized user")
 	ErrForbidden = errors.New("forbidden")
 	ErrNotFound  = errors.New("not found")
@@ -19,18 +20,20 @@ var (
 
 // 1. Sql table creation statements' constants
 const (
-	UserS = `CREATE TABLE IF NOT EXISTS user (
+	UserS = `DROP TABLE IF EXISTS user;
+	CREATE TABLE IF NOT EXISTS user (
 		id TEXT NOT NULL PRIMARY KEY, 
 		username TEXT NOT NULL, 
     private INT DEFAULT 0,
-		profilename TEXT DEFAULT 'Bassetti Enrico', 
+		profilename TEXT NOT NULL, 
 		profilemessage TEXT DEFAULT '',
 		gender TEXT DEFAULT '', 
 		birthdate text DEFAULT '',
 		profilephotoid TEXT DEFAULT ''
 		);`
 
-	CommentS = `CREATE TABLE IF NOT EXISTS comment (
+	CommentS = `DROP TABLE IF EXISTS comment;
+	CREATE TABLE IF NOT EXISTS comment (
 		id TEXT NOT NULL PRIMARY KEY, 
 		postid TEXT NOT NULL REFERENCES post(id) On DELETE CASCADE,
 		userid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE,
@@ -39,7 +42,8 @@ const (
 	);`
 	// can store and retrieve TIMESTAMP as strings 2022-12-28T03:19:15Z
 
-	PostS = `CREATE TABLE IF NOT EXISTS post (
+	PostS = `DROP TABLE IF EXISTS post;
+	CREATE TABLE IF NOT EXISTS post (
 		id TEXT NOT NULL PRIMARY KEY, 
 		photoid TEXT NOT NULL,
 		userid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE,
@@ -47,31 +51,36 @@ const (
 		datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	LikeS = `CREATE TABLE IF NOT EXISTS like (
+	LikeS = `DROP TABLE IF EXISTS like;
+	CREATE TABLE IF NOT EXISTS like (
 		postid TEXT NOT NULL REFERENCES post(id) On DELETE CASCADE, 
 		userid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE,
 		PRIMARY KEY (postid, userid)
 		);`
 
-	FollowS = `CREATE TABLE IF NOT EXISTS follow (
+	FollowS = `DROP TABLE IF EXISTS follow;
+	CREATE TABLE IF NOT EXISTS follow (
 		followerid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE, 
 		followingid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE,
 		PRIMARY KEY (followerid, followingid)
 		);`
 
-	BanS = `CREATE TABLE IF NOT EXISTS ban (
+	BanS = `DROP TABLE IF EXISTS ban;
+	CREATE TABLE IF NOT EXISTS ban (
 		bannerid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE, 
 		bannedid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE,
 		PRIMARY KEY (bannerid, bannedid)
 		);`
 
-	HashtagS = `CREATE TABLE IF NOT EXISTS hashtag (
+	HashtagS = `DROP TABLE IF EXISTS hashtag;
+	CREATE TABLE IF NOT EXISTS hashtag (
 		hashtag TEXT NOT NULL, 
 		postid TEXT NOT NULL REFERENCES post(id) On DELETE CASCADE,
 		PRIMARY KEY (hashtag, postid)
 		);`
 
-	SessionS = `CREATE TABLE IF NOT EXISTS session (
+	SessionS = `DROP TABLE IF EXISTS session;
+	CREATE TABLE IF NOT EXISTS session (
 		id TEXT NOT NULL PRIMARY KEY, 
 		userid TEXT NOT NULL REFERENCES user(id) On DELETE CASCADE
 		);`

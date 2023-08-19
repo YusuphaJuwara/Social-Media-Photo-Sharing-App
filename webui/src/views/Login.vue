@@ -33,27 +33,17 @@ export default {
 					localStorage.setItem('token', this.token);
 					localStorage.setItem('userid', this.userid);
 
-					let t1 = localStorage.getItem('token');
-					let u1 = localStorage.getItem('userid');
-					//remove later
-					confirm("username: "+this.username+
-									"\nthis.token: "+this.token+
-									"\nthis.userid: "+this.userid+
-									"\nt1: "+t1+
-									"\nu1: "+u1);
-					////////////////////////////////////////////////
-
 					if (statusCode == 201) { 
 						confirm("You have successfully logged in! Please setup your profile details.\n" +
 										"To comply with the project requirements, you can only login with the username henceforth.\n" +
-										"Since the username is the only thing that can log you in, I have decided to use another name for the profile name different than the username at least to have a little bit of security because I love secure stuffs!!!.\n" +
-										"The profile name is set to a default name. Change it in your personal profile page by clicking 3 vertical dots to open a dropdown for a whole lot of other stuffs too.\n" +
-										"Surf your way in now ..."
+										"Since the username is the only thing that can log you in, I found it logical to use another name for the profile name that can be different than the username to at least to have a little bit of security because I love secure stuffs!!!.\n" +
+										"The profile name is set to the username as default. Change it in your personal profile page if you wish to"
 										);
-						this.$router.push("/"+this.userid+"/profile");
-					} else {
-						this.$router.push("/"+this.userid+"/stream/");
-					}
+						//this.$router.push("/"+this.userid+"/profile");
+					} //else {
+					// 	this.$router.push("/"+this.userid+"/stream/");
+					// }
+					this.$router.push("/"+this.userid);
 				} catch (e) {
 					this.errormsg = e.toString();
 				}

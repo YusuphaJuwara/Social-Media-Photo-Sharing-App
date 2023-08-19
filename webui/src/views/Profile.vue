@@ -50,7 +50,7 @@ export default {
       ban: false,
       banUsers: [],
       user: null,
-      userid: null,
+      userid: this.$route.params.userid,
       userID: localStorage.getItem('userid'),
       token: localStorage.getItem('token'),
       clicked: false,
@@ -78,9 +78,9 @@ export default {
     }
   },
   methods: {
-    // load() {
-    //   return load
-    // },
+    load() {
+      return load
+    },
     checkImage() {
       this.selectedImage = this.$refs.image.files.length > 0;
     },
@@ -589,11 +589,20 @@ export default {
   beforeCreate(){
     this.userID = localStorage.getItem('userid')
     this.token = localStorage.getItem('token')
+    this.userid = this.$route.params.userid
+
+    this.getUserPhotos()
+    this.getUserProfile()
+
+    profname = user['profile-name'],
+    profmsg = user['profile-message'],
+    gender = user['gender'],
+    bdate = user['birth-date']
   },
   mounted() {
     //this.getUserPhotos()
     //this.getUserProfile()
-    this.userid = this.$route.params.userid
+    
   }
 }
 </script>
@@ -690,31 +699,31 @@ export default {
     </div>
     <!----------->
     <!-- Dropdown for followers-->
-			<div class="modal fade" id="staticBackdrop10" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-				aria-labelledby="staticBackdropLabel" aria-hidden="true">
-				<div class="modal-dialog">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h1 class="modal-title fs-5" id="staticBackdropLabel">Users who followed you</h1>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body" v-for="uid in getUserFollows()[0]" :key="uid">
-							<div class="card mb-3 p-2">
-								<div class="card-header header-left">
-									<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-										@click="userDetails(uid)[0]" data-bs-dismiss="modal">
-										<img class="imgThumbNail" :src="getUserProfilePicture(uid)" />
-										<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ this.userDetails(uid)[1] }}</h5>
-									</a>
-								</div>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-						</div>
-					</div>
-				</div>
-			</div>
+    <div class="modal fade" id="staticBackdrop10" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="staticBackdropLabel">Users who followed you</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" v-for="uid in getUserFollows()[0]" :key="uid">
+            <div class="card mb-3 p-2">
+              <div class="card-header header-left">
+                <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
+                  @click="userDetails(uid)[0]" data-bs-dismiss="modal">
+                  <img class="imgThumbNail" :src="getUserProfilePicture(uid)" />
+                  <h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ this.userDetails(uid)[1] }}</h5>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
       <!-- Dropdown for followings-->
 			<div class="modal fade" id="staticBackdrop11" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
 				aria-labelledby="staticBackdropLabel" aria-hidden="true">

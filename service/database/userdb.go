@@ -180,7 +180,7 @@ func (db *appdbimpl) DoLogin(username string) (string, string, string, error) {
 			return "", "", "", err
 		}
 		newid := nid.String()
-		_, err = tx.Exec(`INSERT INTO user (id, username) VALUES (?, ?)`, newid, username)
+		_, err = tx.Exec(`INSERT INTO user (id, username, profilename) VALUES (?, ?, ?)`, newid, username, username)
 		if err != nil {
 			return "", "", "", err
 		}
@@ -1299,23 +1299,23 @@ func (db *appdbimpl) GetUserPhotos(userID, token string) ([]structs.Post, error)
 func (db *appdbimpl) UploadPhoto(userID, token string, caption string, hashtags []string, r *http.Request) (string, error) {
 	userid, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", structs.ErrUnAuth
+		return "UploadPhoto: sessionCheck -> ErrUnAuth", structs.ErrUnAuth
 	} else if err != nil {
-		return "", err
+		return "UploadPhoto: sessionCheck -> not nil", err
 	}
 	if userid != userID {
-		return "", structs.ErrForbidden
+		return "UploadPhoto: userid != userID -> ErrForbidden", structs.ErrForbidden
 	}
 
 	uid, err := uuid.NewV4()
 	if err != nil {
-		return "", err
+		return "UploadPhoto: new uid -> not nil", err
 	}
 	photoID := uid.String()
 
 	uid, err = uuid.NewV4()
 	if err != nil {
-		return "", err
+		return "UploadPhoto: new uid -> not nil", err
 	}
 
 	postID := uid.String()
@@ -1329,7 +1329,7 @@ func (db *appdbimpl) UploadPhoto(userID, token string, caption string, hashtags 
 	// atomic transaction
 	tx, err := db.c.Begin()
 	if err != nil {
-		return "", err
+		return "UploadPhoto: begin transaction", err
 	}
 	defer func() {
 		_ = tx.Rollback()
@@ -1337,23 +1337,23 @@ func (db *appdbimpl) UploadPhoto(userID, token string, caption string, hashtags 
 
 	_, err = tx.Exec(sqlUploadPhoto, postID, photoID, userID, caption, datetime)
 	if err != nil {
-		return "", err
+		return "UploadPhoto: Exec transaction -> post", err
 	}
 
 	for _, hashtag := range hashtags {
-		_, err = tx.Exec("INSERT INTO hashtag (hashtag, postid) VALUES (?,?);", postID, hashtag)
+		_, err = tx.Exec("INSERT INTO hashtag (hashtag, postid) VALUES (?,?);", hashtag, postID)
 		if err != nil {
-			return "", err
+			return "UploadPhoto: begin transaction -> hashtag", err
 		}
 	}
 
 	err = updateProfPic(photoID, r)
 	if err != nil {
-		return "", err
+		return "UploadPhoto: update pic", err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return "", err
+		return "UploadPhoto: commit transaction", err
 	}
 
 	return postID, nil

@@ -17,7 +17,7 @@ func (rt *_router) getAllUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Errorf("Token Error: %v \n%s", err, token)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 

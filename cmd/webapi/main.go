@@ -96,7 +96,7 @@ func run() error {
 	logger.Infof("application initializing")
 
 	logger.Println("If the pictures folder does not exist, create it and put it in the structs.constant.go file in the service folder.\n E.g., picFolder=/tmp/pictures")
-	err = os.MkdirAll(structs.PicFolder, os.ModeDir)
+	err = os.MkdirAll(structs.PicFolder, os.ModeDir|os.ModePerm)
 	if err != nil {
 
 		// If path is already a directory, MkdirAll does nothing and returns nil.

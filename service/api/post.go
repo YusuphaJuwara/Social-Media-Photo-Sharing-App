@@ -325,9 +325,6 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	caption := r.FormValue("caption")
 
-	// r.Form returns values like map[string][]string.
-	hashtags := r.Form["hashtags"]
-
 	if caption != "" {
 		err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
@@ -345,12 +342,16 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 
+	// r.Form returns values like map[string][]string.
+	hashtags := r.Form["hashtags"]
+	// ctx.Logger.WithError(err).Infof("Hashtags: %v", hashtags)
+
 	if len(hashtags) > 0 {
 		for _, hashtag := range hashtags {
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 			if errors.Is(err, structs.ErrBadReq) {
 
-				ctx.Logger.WithError(err).Error("Bad Request Error format for the hashtag")
+				ctx.Logger.WithError(err).Errorf("Bad Request Error format for the hashtag: %s", hashtag)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 
@@ -368,7 +369,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Errorf("User Not Authorized\n %s \n %v", postID, err)
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -379,13 +380,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden Error")
+		ctx.Logger.WithError(err).Errorf("Forbidden Error\n %s \n %v", postID, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Errorf("Error on our part\n %s \n %v", postID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

@@ -62,24 +62,27 @@ export default {
       this.errormsg = null;
 
       try {
-        const hashtags = this.form.hashtags.split(',').map(tag => tag.trim());
+        var hashtagsArray = this.form.hashtags.split(',').map(tag => tag.trim());
 
         const formData = new FormData();
         formData.append('photo', this.form.picture);
         formData.append('caption', this.form.caption);
-        formData.append('hashtags', hashtags);
+        hashtagsArray.forEach(hashtag => {
+            formData.append('hashtags', hashtag); // Append each hashtag individually
+        });
 
         const response = await this.$axios.post("/users/"+this.userid+"/posts/", formData, {
           headers: {
             // 'Authorization': 'Bearer ' + this.token,
-            'Content-Type': 'multipart/form-data'
+            'content-type': 'multipart/form-data'
           }
         });
         this.form.picture = null;
         this.form.caption = '';
         this.form.hashtags = '';
 
-        this.$router.push("/"+this.userid+"/stream/");
+        // this.$router.push("/"+this.userid+"/stream/");
+        this.$router.push("/"+this.userid);
       } catch (e) {
         this.errormsg = e.toString();
       }

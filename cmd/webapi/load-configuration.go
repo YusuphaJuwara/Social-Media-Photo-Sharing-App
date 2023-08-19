@@ -31,7 +31,7 @@ type WebAPIConfiguration struct {
 	DB    struct {
 		//Filename string `conf:"default:wasa.db"`
 		// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-		Filename string `conf:"default:wasa.db?_foreign_keys=on"`
+		Filename string `conf:"default:file:./wasa.db?_foreign_keys=on"`
 	}
 }
 
