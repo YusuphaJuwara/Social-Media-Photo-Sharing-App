@@ -1,24 +1,25 @@
 import axios from "axios";
 
-axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
+// axios.defaults.headers.common['authorization'] = localStorage.getItem('token');
 const instance = axios.create({
 	baseURL: __API_URL__,
 	timeout: 1000 * 5
 });
 
-// instance.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
+instance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+			console.log('token yes yes yes')
+      config.headers['Authorization'] = token;
+    }
 
-//     return config;
-//   },
+    return config;
+  },
 
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default instance;
