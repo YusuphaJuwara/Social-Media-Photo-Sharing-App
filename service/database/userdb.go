@@ -517,7 +517,7 @@ func (db *appdbimpl) GetUserProfilePicture(userID, token string) (string, error)
 	// If the client is banned, then for the client, the user does not exist. So return 404.
 	err = banCheck(userID, userid, db.c)
 	if errors.Is(err, structs.ErrNotFound) {
-		return "", structs.ErrNotFound
+		return "banCheck -> user banned", structs.ErrNotFound
 	} else if err != nil {
 		return "", err
 	}
@@ -528,7 +528,7 @@ func (db *appdbimpl) GetUserProfilePicture(userID, token string) (string, error)
 	var pid string
 	err = db.c.QueryRow(sqlGetUser, userID).Scan(&pid)
 	if errors.Is(err, sql.ErrNoRows) || pid == "" {
-		return "", structs.ErrNotFound
+		return "No prof photo. pid -> "+pid, structs.ErrNotFound
 	} else if err != nil {
 		return "", err
 	}
@@ -1576,12 +1576,12 @@ func (db *appdbimpl) GetLikes(token, postID string) (*structs.Like, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		pid = ""
-		err = rows.Scan(&pid)
+		var pd string
+		err = rows.Scan(&pd)
 		if err != nil {
 			return nil, err
 		}
-		userids = append(userids, pid)
+		userids = append(userids, pd)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -1614,7 +1614,15 @@ func (db *appdbimpl) LikePhoto(userID, token, postID string) error {
 		return err
 	}
 
-	return nil
+	//datetime := time.Now().Format("2006-01-02T15:04:05Z")
+
+	sqlLike := `
+		INSERT INTO like (postid, userid)
+		VALUES (?, ?);
+	`
+	_, err = db.c.Exec(sqlLike, postID, userid)//, datetime)
+	
+	return err
 }
 
 func (db *appdbimpl) UnlikePhoto(userID, token, postID string) error {
@@ -1635,7 +1643,11 @@ func (db *appdbimpl) UnlikePhoto(userID, token, postID string) error {
 	} else if err != nil {
 		return err
 	}
-	return nil
+	
+	//datetime := time.Now().Format("2006-01-02T15:04:05Z")
+
+	_, err = db.c.Exec("DELETE FROM like WHERE postid = ? AND userid = ?", postID, userid)
+	return err
 }
 
 // Get all the comments of a given post.
@@ -1786,10 +1798,10 @@ func (db *appdbimpl) UncommentPhoto(token, commentID string) error {
 	}
 
 	// Check that the user trying to delete the post is the one who placed it or on whose post it was placed
-	if userID != userid || pid != userid {
-		return structs.ErrForbidden
+	if userID == userid || pid == userid {
+		_, err = db.c.Exec("DELETE FROM comment WHERE comment.id = ? ", commentID)
+		return err
 	}
 
-	_, err = db.c.Exec("DELETE FROM comment WHERE comment.id = ? ", commentID)
-	return err
+	return structs.ErrForbidden
 }

@@ -2,34 +2,12 @@
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 <script>
-export default {
-	data() {
-    return {
-			userid: localStorage.getItem('userid'),
-			token: localStorage.getItem('token'),
-			errormsg: null
-
-		}
-	},
-	methods: {
-		
-	},
-
-	beforeCreate() {
-    // Initialize variables here
-    this.userid = localStorage.getItem('userid');
-    this.token = localStorage.getItem('token');
-  },
-
-  mounted() {
-
-  },
-}
+export default {}
 </script>
 
 <template>
 
-	<header class="navbar navbar-dark sticky-top bg-dark flex-lg-nowrap p-0 shadow">
+	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
 		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#/">WaSA Photo Sharing App</a>
 		<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
@@ -45,21 +23,45 @@ export default {
 					</h6>
 					<ul class="nav flex-column">
 						<li class="nav-item">
-							<RouterLink :to="`/login`" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
+							<RouterLink to="/" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
 								Login
 							</RouterLink>
 						</li>
 						<li class="nav-item">
-							<RouterLink :to="`/`" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
-								User Page Test
+							<RouterLink to="/profile" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Profile
 							</RouterLink>
 						</li>
 						<li class="nav-item">
-							<RouterLink :to="`/create-post`" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
+							<RouterLink to="/stream" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Stream
+							</RouterLink>
+						</li>
+						<li class="nav-item">
+							<RouterLink to="/posts" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Posts
+							</RouterLink>
+						</li>
+						<li class="nav-item">
+							<RouterLink to="/users" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Users
+							</RouterLink>
+						</li>
+						<li class="nav-item">
+							<RouterLink to="/create-post" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
 								Create Post
+							</RouterLink>
+						</li>
+						<li class="nav-item">
+							<RouterLink to="/modala" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Modal A
 							</RouterLink>
 						</li>
 					</ul>
@@ -71,6 +73,7 @@ export default {
 			</main>
 		</div>
 	</div>
-
 </template>
 
+<style>
+</style>

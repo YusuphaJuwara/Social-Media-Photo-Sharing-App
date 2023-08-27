@@ -1,69 +1,25 @@
-<style scoped>
-.card {
-	margin-bottom: 20px;
-}
-
-.imgThumbNail {
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-/* .user-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	object-fit: cover;
-	margin-right: 8px;
-	display: inline-block;
-} */
-
-.user-name {
-	color: #333;
-	cursor: pointer;
-	display: inline-block;
-	vertical-align: middle;
-}
-
-.highlighted {
-	color: blue;
-}
+<style>
 </style>
 
 <script>
+import LinkToUserProfile from "./LinkToUserProfile.vue"
+
 export default {
-	data: function () {
+	components: {
+		LinkToUserProfile
+	},
+	data() {
 		return {
-			token: localStorage.getItem('token'),
-			userid: localStorage.getItem('userid'),
-			highlightProfile: false,
 			errormsg: null,
 			loading: false,
-			users: [],
+      // userid: '',
+      users: [],
+      userProfilePics: [],
+
 		}
 	},
-	methods: {
-		load() {
-			return load
-		},
-		async logOut() {
-			this.loading = true;
-			this.errormsg = null;
-			try {
-				await this.$axios.delete("/session");
-
-				// invalidate the data ...
-				localStorage.removeItem('token');
-				localStorage.removeItem('userid');
-
-				this.$router.push("/login");
-			} catch (e) {
-				this.errormsg = e.toString();
-			}
-			this.loading = false;
-		},
-		async getAllUsers() {
+  methods: {
+    async getAllUsers() {
 			this.loading = true;
 			this.errormsg = null;
 			try {
@@ -74,118 +30,60 @@ export default {
 			}
 			this.loading = false;
 		},
-		
-		async home() {
-			this.highlightProfile = !this.highlightProfile
-			this.$router.push("/"+this.userid+"/stream/");
-		},
-		async getUserProfilePicture(userid) {
-			// this.loading = true;
-			this.errormsg = null;
-			let photo = ''
-			try {
-				let response = await this.$axios.get("/users/" + userid + "/profile-picture");
-				photo = URL.createObjectURL(new Blob([response.data]));
 
-				// refresh...
-				// await this.getAllUsers();
+    async getUserProfilePicture() {
+			this.loading = true;
+			this.errormsg = null;
+			try {
+        this.userProfilePics = [];
+        for (const user of this.users) {
+          var uid = user['user-id']
+          const response = await this.$axios.get(`/users/"${uid}/profile-picture`, {responseType: "blob"});
+          const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
+          this.userProfilePics.push(photo);
+        }
 			} catch (e) {
 				this.errormsg = e.toString();
+			} finally {
+				this.loading = false;
 			}
-			// this.loading = false;
-			return photo;
 		},
-		async getProfileName(userid) {
-			// this.loading = true;
-			this.errormsg = null;
-			let profileName = ''
-			try {
-				let response = await this.$axios.get("/users/" + userid);
-				profileName = response.data['profile-name']
 
-				//delete later
-				/*const headersArray = [];
-					Object.entries(response.data).forEach(([key, value]) => {
-						headersArray.push(`${key}: ${value}`);
-					});
 
-				confirm("Profile name: " + profileName+"\n response.data: " + headersArray)
-				*/
-				//////////////////////////////////7
+	},
+	// created(){
+	// 	this.userid = localStorage.getItem('userid')
+	// },
+	async mounted(){
+		await this.getAllUsers();
+    await this.getUserProfilePicture();
 
-				// refresh...
-				// await this.getAllUsers();
-			} catch (e) {
-				this.errormsg = e.toString();
-			}
-			// this.loading = false;
-			return profileName;
-		},
-		userProfile(userid) {
-			this.highlightProfile = !this.highlightProfile
-			this.$router.push("/"+userid+"/profile");
-			// this.$route.params.id
-		},
-  },
-	beforeCreate() {
-    // Initialize variables here
-    this.userid = localStorage.getItem('userid');
-    this.token = localStorage.getItem('token');
-  },
-	mounted() {
-		this.getAllUsers()
 	}
+
 }
-
 </script>
-
 <template>
-	<div>
-		<div
-			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">{{ getProfileName(userid) }}'s getAllUsers excluding 'ban' and ...</h1>
-			<div class="btn-toolbar mb-2 mb-md-0">
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">
-						<svg class="feather">
-							<use href="/feather-sprite-v4.29.0.svg#log-out" />
-						</svg>
-						Logout
-					</button>
-				</div>
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="getAllUsers">
-						Refresh getAllUsers
-					</button>
-				</div>
-				<div class="btn-group me-2">
-					<button type="button" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false" class="btn btn-sm btn-outline-primary" @click="home">
-						Stream Home Page
-					</button>
-				</div>
-        <div class="btn-group me-2">
-					<button type="button" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false" class="btn btn-sm btn-outline-primary" @click="userProfile(userid)">
-						Your Profile Page
-					</button>
-				</div>
-			</div>
-		</div>
+<div>
 
-		<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+	<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+	<LoadingSpinner v-if="loading"></LoadingSpinner>
 
-		<LoadingSpinner v-if="loading"></LoadingSpinner>
+  <div class="card m-2" style="border: 1px solid red;" v-if="!loading" v-for="(user, idx) in users" >
+    <div class="card-header m-2">
+      <LinkToUserProfile
+      :profpic="userProfilePics[idx]" 
+      :userprofname=" user['profile-name']"
+      :uid="user['user-id']">
+      </LinkToUserProfile>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4 d-flex justify-content-center">Post Count: {{ user['post-count'] }}</div>
+        <div class="col-md-4 d-flex justify-content-center">Follower Count: {{ user['follower-count'] }}</div>
+        <div class="col-md-4 d-flex justify-content-center">Following Count: {{ user['following-count'] }}</div>
+      </div>
+    </div>
+  </div>
 
-		<div class="card" v-if="!loading" v-for="user in users" :key="user['user-id']">
-			<div class="card-header">
-				<div class="header-left">
-					<a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-						@click="userProfile(user['user-id'])">
-						<img class="imgThumbNail" :src="getUserProfilePicture(user['user-id'])" />
-						<h5 class="user-name" :class="{ 'highlighted': highlightProfile }">{{ getProfileName(user['user-id']) }}
-						</h5>
-					</a>
-				</div>
-			</div>
-		</div>
-	</div>
+</div>
 </template>

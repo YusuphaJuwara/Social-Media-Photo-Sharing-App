@@ -12,8 +12,8 @@
 export default {
   data() {
     return {
-      userid: localStorage.getItem('userid'),
-      token: localStorage.getItem('token'),
+      userid: '',
+      token: '',
       errormsg: null,
 			loading: false,
       form: {
@@ -81,8 +81,8 @@ export default {
         this.form.caption = '';
         this.form.hashtags = '';
 
-        // this.$router.push("/"+this.userid+"/stream/");
-        this.$router.push("/"+this.userid);
+        this.$router.push("/stream");
+        // this.$router.push("/fountain");
       } catch (e) {
         this.errormsg = e.toString();
       }
@@ -90,7 +90,7 @@ export default {
     },
 
   },
-  beforeCreate() {
+  created() {
     // Initialize variables here
     this.userid = localStorage.getItem('userid');
     this.token = localStorage.getItem('token');

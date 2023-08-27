@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	var port = flag.Int("port", 8000, "HTTP port for healthcheck")
+	var port = flag.Int("port", 3000, "HTTP port for healthcheck")
 
 	flag.Parse()
 

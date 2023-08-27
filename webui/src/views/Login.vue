@@ -39,11 +39,10 @@ export default {
 										"Since the username is the only thing that can log you in, I found it logical to use another name for the profile name that can be different than the username to at least to have a little bit of security because I love secure stuffs!!!.\n" +
 										"The profile name is set to the username as default. Change it in your personal profile page if you wish to"
 										);
-						//this.$router.push("/"+this.userid+"/profile");
-					} //else {
-					// 	this.$router.push("/"+this.userid+"/stream/");
-					// }
-					this.$router.push("/"+this.userid);
+						this.$router.push("/profile");
+					} else {
+						this.$router.push("/stream");
+					}
 				} catch (e) {
 					this.errormsg = e.toString();
 				}

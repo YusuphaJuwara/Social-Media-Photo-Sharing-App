@@ -3,12 +3,9 @@ package structs
 import (
 	"errors"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 func TokenCheck(r *http.Request) (string, error) {
@@ -38,21 +35,12 @@ func TokenCheck(r *http.Request) (string, error) {
 
 func UuidCheck(uid string) (string, error) {
 
-	///////////////////////////////////
-	logger := logrus.New()
-	logger.SetOutput(os.Stdout)
-	logger.SetLevel(logrus.InfoLevel)
-	logger.Printf("UUID before: %s \n", uid)
-	///////////////////////////////////
-
 	uid = strings.TrimPrefix(uid, "\"")
 	uid = strings.TrimSuffix(uid, "\"")
-	logger.Printf("UUID after: %s \n", uid)
 
 	pattern := "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
 	match, err := regexp.MatchString(pattern, uid)
-	logger.Printf("UUID match: %b \t %w \n", match, err)
 	if err != nil {
 		return "", err
 	}

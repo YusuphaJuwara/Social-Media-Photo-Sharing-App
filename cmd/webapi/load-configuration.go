@@ -2,12 +2,9 @@ package main
 
 import (
 	"errors"
-	_ "errors"
 	"fmt"
 	"io"
-	_ "io"
 	"os"
-	_ "os"
 	"time"
 
 	"github.com/ardanlabs/conf"
@@ -29,9 +26,8 @@ type WebAPIConfiguration struct {
 	}
 	Debug bool
 	DB    struct {
-		//Filename string `conf:"default:wasa.db"`
-		// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-		Filename string `conf:"default:file:./wasa.db?_foreign_keys=on"`
+		//Filename string `conf:"default:/tmp/decaf.db"`
+		Filename string `conf:"default:wasa.db?_foreign_keys=on"`
 	}
 }
 
@@ -40,7 +36,6 @@ type WebAPIConfiguration struct {
 // configuration file (specified in WebAPIConfiguration.Config.Path).
 // So, CLI parameters will override the environment, and configuration file will override everything.
 // Note that the configuration file can be specified only via CLI or environment variable.
-
 func loadConfiguration() (WebAPIConfiguration, error) {
 	var cfg WebAPIConfiguration
 
@@ -51,7 +46,7 @@ func loadConfiguration() (WebAPIConfiguration, error) {
 			if err != nil {
 				return cfg, fmt.Errorf("generating config usage: %w", err)
 			}
-			fmt.Println(usage) // nolint:forbidigo
+			fmt.Println(usage) //nolint:forbidigo
 			return cfg, conf.ErrHelpWanted
 		}
 		return cfg, fmt.Errorf("parsing config: %w", err)

@@ -16,4 +16,3 @@ FROM nginx:stable
 COPY --from=builder /app/webui/dist /usr/share/nginx/html
 
 # (CMD and EXPOSE are already present in the nginx:stable container, no need to repeat)
-

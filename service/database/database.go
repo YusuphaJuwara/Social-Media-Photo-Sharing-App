@@ -34,8 +34,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"net/http"
+
+	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 )
 
 // AppDatabase is the high level interface for the DB

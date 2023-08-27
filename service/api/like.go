@@ -34,7 +34,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("Bad Request Error for the post-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -50,7 +50,7 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetLikes: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -61,13 +61,13 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("GetLikes: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetLikes: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -83,13 +83,13 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("likePhoto: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("likePhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -110,13 +110,13 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+			ctx.Logger.WithError(err).Errorf("likePhoto: Bad Request Error for the %s format", id)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("likePhoto: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -127,7 +127,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("likePhoto: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -138,19 +138,19 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
+		ctx.Logger.WithError(err).Error("likePhoto: Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("likePhoto: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("likePhoto: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -164,13 +164,13 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("unlikePhoto: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("unlikePhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -191,13 +191,13 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+			ctx.Logger.WithError(err).Error("unlikePhoto: Bad Request Error for the %s format", id)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("unlikePhoto: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -208,7 +208,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("unlikePhoto: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -219,19 +219,19 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
+		ctx.Logger.WithError(err).Error("unlikePhoto: Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("unlikePhoto: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("unlikePhoto: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

@@ -85,13 +85,13 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("getPhotos: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("getPhotos: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -101,7 +101,7 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("getPhotos: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -112,7 +112,7 @@ func (rt *_router) getPhotos(w http.ResponseWriter, r *http.Request, ps httprout
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("getPhotos: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -129,13 +129,13 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Errorf("Token Error: %s", r.Header.Get("authorization"))
+		ctx.Logger.WithError(err).Errorf("getMyStream: Token Error: %s", r.Header.Get("authorization"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("getMyStream: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -147,13 +147,13 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Errorf("Bad Request Error for the user-id format: %s", userID)
+		ctx.Logger.WithError(err).Errorf("getMyStream: Bad Request Error for the user-id format: %s", userID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("getMyStream: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -163,7 +163,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("getMyStream: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -174,13 +174,13 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden request")
+		ctx.Logger.WithError(err).Error("getMyStream: Forbidden request")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("getMyStream: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -344,10 +344,12 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// r.Form returns values like map[string][]string.
 	hashtags := r.Form["hashtags"]
-	// ctx.Logger.WithError(err).Infof("Hashtags: %v", hashtags)
 
-	if len(hashtags) > 0 {
-		for _, hashtag := range hashtags {
+	//if len(hashtags) > 0 {
+	//ctx.Logger.Printf("All Hashtag: %s, Type: %t", hashtags, hashtags)
+	for _, hashtag := range hashtags {
+		if hashtag != "" {
+			//ctx.Logger.Printf("one Hashtag: %s, Type: %t", hashtag, hashtag)
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 			if errors.Is(err, structs.ErrBadReq) {
 
@@ -360,7 +362,6 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 				ctx.Logger.WithError(err).Error("Server Error")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
-
 			}
 		}
 	}
@@ -369,7 +370,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Errorf("User Not Authorized\n %s \n %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("User Not Authorized\n postID: %s \nerr %v", postID, err)
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -380,50 +381,17 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Errorf("Forbidden Error\n %s \n %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("Forbidden Error\n postID: %s \nerr %v", postID, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("Error on our part\n %s \n %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("Error on our part\n postID: %s \nerr %v", postID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
-
-	// file := filepath.Join(structs.PicFolder, photoID + ".png")
-
-	// Create creates or truncates the named file. If the file already exists, it is truncated.
-	// If the file does not exist, it is created with mode 0666 (before umask).
-	// If successful, methods on the returned File can be used for I/O; the associated file descriptor has mode O_RDWR.
-	// If there is an error, it will be of type *PathError.
-
-	// img, err := os.Create(file)
-
-	// if err != nil {
-	// 	ctx.Logger.WithError(err).Error("Error creating file")
-	//     w.WriteHeader(http.StatusInternalServerError)
-	//     return
-
-	// }
-
-	// defer img.Close()
-
-	// Copy copies from src to dst until either EOF is reached on src or an error occurs.
-	// It returns the number of bytes copied and the first error encountered while copying, if any.
-
-	// A successful Copy returns err == nil, not err == EOF.
-	// Because Copy is defined to read from src until EOF, it does not treat an EOF from Read as an error to be reported.
-
-	// _, err = io.Copy(img, photo_file)
-
-	// if err != nil {
-	// 	ctx.Logger.WithError(err).Error("Error copying file")
-	//     w.WriteHeader(http.StatusInternalServerError)
-	//     return
-
-	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -435,13 +403,13 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("modifyCaption: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("modifyCaption: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -463,13 +431,13 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error format")
+			ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error for UuidCheck \n\tpostID or userID: %s \n\t Error: %w", id, err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("modifyCaption: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -479,13 +447,13 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error format")
+		ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error format for caption PatternCheck: \n\tCaption: %s \n\tError: $w", caption, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("modifyCaption: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -495,7 +463,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("modifyCaption: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -506,13 +474,13 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("forbidden error")
+		ctx.Logger.WithError(err).Error("modifyCaption: forbidden error")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("modifyCaption: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -526,13 +494,13 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("deletePhoto: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("deletePhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -552,13 +520,13 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error format")
+			ctx.Logger.WithError(err).Errorf("deletePhoto: Bad Request Error for UuidCheck \n\tpostID or userID: %s \n\t Error: %w", id, err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("deletePhoto: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -569,7 +537,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("deletePhoto: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -586,13 +554,13 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden error")
+		ctx.Logger.WithError(err).Error("deletePhoto: Forbidden error")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 		// if !errors.Is(err, structs.ErrNotFound)  {
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("deletePhoto: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

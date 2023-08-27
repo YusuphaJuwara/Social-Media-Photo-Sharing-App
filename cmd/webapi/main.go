@@ -44,18 +44,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// const (
-// 	APIHost string = ":3000"
-// 	// DebugHost       string        = ":4000"
-// 	ReadTimeout     time.Duration = 5 * time.Second
-// 	WriteTimeout    time.Duration = 5 * time.Second
-// 	ShutdownTimeout time.Duration = 5 * time.Second
-// 	Debug           bool          = true
-
-// 	// filename := "file:./wasa.db?_foreign_keys=on" // to set foreign key constraints on
-// 	DB string = "file:./wasa.db?_foreign_keys=on"
-// )
-
 // main is the program entry point. The only purpose of this function is to call run() and set the exit code if there is
 // any error
 func main() {
@@ -95,18 +83,14 @@ func run() error {
 
 	logger.Infof("application initializing")
 
-	logger.Println("If the pictures folder does not exist, create it and put it in the structs.constant.go file in the service folder.\n E.g., picFolder=/tmp/pictures")
-	err = os.MkdirAll(structs.PicFolder, os.ModeDir|os.ModePerm)
+	err = structs.PicFolderDownloadAndSavePhoto()
 	if err != nil {
-
-		// If path is already a directory, MkdirAll does nothing and returns nil.
-		// if !os.IsExist(err) {
-		// 	logger.WithError(err).Error("error regarding the pictures folder")
-		// 	return fmt.Errorf("error creating/checking pictures folder: %w", err)
-		// }
-
-		logger.WithError(err).Error("error regarding the pictures folder")
-		return fmt.Errorf("error creating pictures folder: %w", err)
+		logger.WithError(err).Error(err)
+		return fmt.Errorf("error with PicFolder: %w", err)
+	} else {
+		logger.Printf("photo downloaded and saved successfully!"+
+									"\n\tPicFolder: %s \n\tDefault Pic Name: %s", 
+									structs.PicFolder, structs.FileName)
 	}
 
 	logger.Println("initializing database support")

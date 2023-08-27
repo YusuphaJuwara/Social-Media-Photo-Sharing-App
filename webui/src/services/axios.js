@@ -10,7 +10,6 @@ instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-			console.log('token yes yes yes')
       config.headers['Authorization'] = token;
     }
 
