@@ -322,13 +322,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -340,13 +340,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -357,10 +357,12 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	gender := r.FormValue("gender")
 	birthdate := r.FormValue("birth-date")
 
+	ctx.Logger.Printf("UpdateUserProfile: \n\tprofilename: %s  \n\tprofilemessage: %s \n\tgender: %s \n\tbirthdate: %s", profilename, profilemessage, gender, birthdate)
+
 	// If all four are empty, reject it
 	if profilename == "" && profilemessage == "" && gender == "" && birthdate == "" {
 
-		ctx.Logger.WithError(err).Error("At least one field must not be empty")
+		ctx.Logger.WithError(err).Errorf("UpdateUserProfile: At least one field must not be empty. \n\tprofilename: %s  \n\tprofilemessage: %s \n\tgender: %s \n\tbirthdate: %s", profilename, profilemessage, gender, birthdate)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -379,13 +381,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		err = structs.PatternCheck(structs.ProfileNamePattern, profilename, structs.ProfileNameMinLen, structs.ProfileNameMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user profile name format")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile:: Bad Request Error for the user profile name format")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -396,13 +398,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		err = structs.PatternCheck(structs.MessagePattern, profilemessage, structs.MessageMinLen, structs.MessageMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user profile message name format")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Bad Request Error for the user profile message name format")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -413,24 +415,24 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 		err = structs.GenderCheck(gender)
 		if err != nil {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user gender format")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Bad Request Error for the user gender format")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		}
 	}
 
-	if birthdate != "" {
+	if birthdate != "" && birthdate != "undefined" {
 		err = structs.DateTimeCheck(structs.DatePattern, birthdate)
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error for the user birthdate format")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Bad Request Error for the user birthdate format")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("UpdateUserProfile: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -441,7 +443,7 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -452,13 +454,13 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("UpdateUserProfile: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -467,7 +469,6 @@ func (rt *_router) updateUserProfile(w http.ResponseWriter, r *http.Request, ps 
 	if valCreated == "204" {
 		w.WriteHeader(http.StatusNoContent)
 		return
-
 	}
 
 	// Send this output to the user if any field was created.
@@ -546,13 +547,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -564,13 +565,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -582,13 +583,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	err = structs.PatternCheck(structs.UsernamePattern, username, structs.UsernameMinLen, structs.UsernameMaxLen)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the username format")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Bad Request Error for the username format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -598,7 +599,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("SetMyUserName: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -609,13 +610,13 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("SetMyUserName: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

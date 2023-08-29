@@ -3,11 +3,12 @@
 
 <script>
 import Post from "./Post.vue"
+import ProfileDetails from "./ProfileDetails.vue";
 
 export default {
-  // props: ['postid'],
 	components: {
-		Post
+		Post,
+		ProfileDetails,
 	},
 	data() {
 		return {
@@ -26,15 +27,18 @@ export default {
         let response = await this.$axios.get("/users/"+this.userid);
         this.user = response.data;
 
-				// if (this.user['user-post-ids'].length === 0){
-				// 	this.$router.push("/create-post");
-				// }
+				console.log("Profile: user: "+this.user);
+
       } catch (e) {
         this.errormsg = e.toString();
       } finally {
 				this.loading = false;
 			}
     },
+
+		async onPostDeleted(){
+			await this.getUserProfile();
+		},
 
 
 	},
@@ -54,7 +58,9 @@ export default {
 	<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
 	<LoadingSpinner v-if="loading"></LoadingSpinner>
 
-	<Post v-for="pid in user['user-post-ids']" :postid="pid"></Post>
+	<ProfileDetails :userid="userid"></ProfileDetails>
+
+	<Post v-for="pid in user['user-post-ids']" :postid="pid" @postDeleted="onPostDeleted"></Post>
 
 </div>
 </template>

@@ -119,11 +119,11 @@ export default {
     </div>
     <div class="mb-3">
       <label for="caption" class="form-label">Caption:</label>
-      <textarea id="caption" class="form-control" v-model="form.caption" @mouseover="showHint('caption')"></textarea>
+      <textarea id="caption" class="form-control" v-model="form.caption" @mouseover="showHint('caption')" placeholder="What a beautiful photo!!!"></textarea>
     </div>
     <div class="mb-3">
       <label for="hashtags" class="form-label">Hashtags:</label>
-      <textarea id="hashtags" class="form-control" v-model="form.hashtags" @mouseover="showHint('hashtags')"></textarea>
+      <textarea id="hashtags" class="form-control" v-model="form.hashtags" @mouseover="showHint('hashtags')" placeholder="culPic, gr8, nice"></textarea>
     </div>
     <div>
       <button v-if="!loading" :disabled="!isValid" type="button" class="btn btn-primary" @click="uploadPhoto">

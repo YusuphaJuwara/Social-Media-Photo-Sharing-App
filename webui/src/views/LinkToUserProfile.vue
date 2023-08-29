@@ -1,4 +1,5 @@
-<style scoped>
+<!-- Global scope -->
+<style>
 .card {
 	margin-bottom: 20px;
 }
@@ -39,7 +40,7 @@ export default {
 			errormsg: null,
 			loading: false,
 			highlightProfile: false,
-      // userid: '',
+      userid: '',
       posts: [],
 
 		}
@@ -47,14 +48,21 @@ export default {
   methods: {
 		async userProfile() {
 			this.highlightProfile = !this.highlightProfile
-			this.$router.push("/profile");
-			// this.$router.push("/create-post");
+
+			if (this.userid===this.uid){
+				this.$router.push("/profile");
+				console.log("userProfile(): this.userid === this.uid. \nuid: "+this.uid+"\nuserid: "+this.userid)
+			} else {
+				this.$router.push("/"+this.uid+"/profile");
+				console.log("userProfile(): this.userid != this.uid. \nuid: "+this.uid+"\nuserid: "+this.userid);
+			}
 		},
 
 	},
-	// created(){
-	// 	this.userid = localStorage.getItem('userid')
-	// },
+
+	created(){
+		this.userid = localStorage.getItem('userid')
+	},
 
 }
 </script>
@@ -69,5 +77,13 @@ export default {
 				</h5>
 			</div>
 		</a>
+		<!-- <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
+        @click="userProfile()">
+			<div class="d-flex align-items-center">
+				<img class="imgThumbNail me-2 mb-2" :src="profpic" alt="Opps! error" />
+				<h5 class="user-name ms-2 mb-2" :class="{ 'highlighted': highlightProfile }">{{ userprofname}}
+				</h5>
+			</div>
+		</a> -->
   </div>
 </template>

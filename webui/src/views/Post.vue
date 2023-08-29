@@ -119,8 +119,12 @@ export default {
 
 				this.hashtags = ''
 				const htgs = this.post['hashtags']
-				for (const htg of htgs) {
-					this.hashtags += htg + ', ';
+				if (htgs){
+					for (const htg of htgs) {
+						if (htg != ''){
+							this.hashtags += htg + ', ';
+						}
+					}
 				}
 				this.hashtags = this.hashtags.slice(0, -2);
 
@@ -198,8 +202,9 @@ export default {
 				try {
 					await this.$axios.delete("/users/" +this.userid+"/posts/" + this.postid);
 
+					this.$emit('postDeleted');
 					// refresh ...
-					await this.getPhoto();
+					// await this.getPhoto();
 				} catch (e) {
 					this.errormsg = e.toString();
 				} finally {

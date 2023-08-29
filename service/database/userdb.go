@@ -557,21 +557,21 @@ func (db *appdbimpl) ChangeUserProfilePicture(userID, token string, r *http.Requ
 		_ = tx.Rollback()
 	}()
 
-	pid := ""
-	err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&pid)
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return "", "", err
-		}
-	}
+	// pid := ""
+	// err = tx.QueryRow("SELECT profilephotoid FROM user WHERE id = ?", userid).Scan(&pid)
+	// if err != nil {
+	// 	if !errors.Is(err, sql.ErrNoRows) {
+	// 		return "", "", err
+	// 	}
+	// }
 
-	if pid != "" {
-		err = updateProfPic(pid, r)
-		if err != nil {
-			return "", "", err
-		}
-		return pid, "204", nil
-	}
+	// if pid != "" {
+	// 	err = updateProfPic(pid, r)
+	// 	if err != nil {
+	// 		return "", "", err
+	// 	}
+	// 	return pid, "204", nil
+	// }
 
 	uid, err := uuid.NewV4()
 	if err != nil {
@@ -665,7 +665,7 @@ func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
 		// }
 		return err
 	}
-	if photoID == "" {
+	if photoID == "" || photoID == "ffffffff-ffff-ffff-ffff-ffffffffffff" {
 		return nil
 	}
 
@@ -678,7 +678,7 @@ func (db *appdbimpl) DeleteUserProfilePicture(userID, token string) error {
 		}
 	}
 
-	_, err = tx.Exec("UPDATE user SET profilephotoid = '' WHERE id = ?", userid)
+	_, err = tx.Exec("UPDATE user SET profilephotoid = 'ffffffff-ffff-ffff-ffff-ffffffffffff' WHERE id = ?", userid)
 	if err != nil {
 		return err
 	}

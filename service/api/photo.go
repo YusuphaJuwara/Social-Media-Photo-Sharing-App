@@ -192,13 +192,13 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -210,23 +210,23 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
-
-	photoID, valCreated, err := rt.db.ChangeUserProfilePicture(userID, token, r)
+	
+	photoID, _, err := rt.db.ChangeUserProfilePicture(userID, token, r)
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -237,23 +237,22 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Not found")
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("changeUserProfilePicture: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
-	if valCreated == "204" {
-		w.WriteHeader(http.StatusNoContent)
-		return
-
-	}
+	// if valCreated == "204" {
+	// 	w.WriteHeader(http.StatusNoContent)
+	// 	return
+	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

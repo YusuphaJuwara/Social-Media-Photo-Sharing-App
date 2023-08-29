@@ -29,7 +29,6 @@ export default {
 
 					console.log(response);
 					// the data is globally available to all 
-					// use sessionStorage if ...
 					localStorage.setItem('token', this.token);
 					localStorage.setItem('userid', this.userid);
 

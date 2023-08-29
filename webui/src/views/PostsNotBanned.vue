@@ -30,6 +30,10 @@ export default {
 			this.loading = false;
 		},
 
+		async onPostDeleted(){
+			await this.getPhotos();
+		},
+
     async logOut() {
 			this.loading = true;
 			this.errormsg = null;
@@ -66,6 +70,6 @@ export default {
     <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
     <LoadingSpinner v-if="loading"></LoadingSpinner>
   
-    <Post v-for="post in posts" :postid="post['post-id']"></Post>
+    <Post v-for="post in posts" :postid="post['post-id']" @postDeleted="onPostDeleted"></Post>
   </div>
 </template>

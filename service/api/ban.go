@@ -13,11 +13,11 @@ import (
 func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("getBanUsers: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("getBanUsers: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -27,28 +27,28 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 	// Check the validity of the userID
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("getBanUsers: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("getBanUsers: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	bannedUserIDs, err := rt.db.GetBanUsers(userID, token)
 	if errors.Is(err, structs.ErrUnAuth) {
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("getBanUsers: User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 	} else if errors.Is(err, structs.ErrForbidden) {
-		ctx.Logger.WithError(err).Error("Forbidden to modify another user's info")
+		ctx.Logger.WithError(err).Error("getBanUsers: Forbidden to modify another user's info")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("getBanUsers: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
