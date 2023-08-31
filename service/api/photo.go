@@ -19,13 +19,13 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Token Error: \n\ttoken: %s, \n\terr: %w", token, err)
+		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Token Error: \n\ttoken: %s", token)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Server Error: \n\ttoken: %s, \n\terr: %w", token, err)
+		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Server Error: \n\ttoken: %s", token)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -36,13 +36,13 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	// Check the validity of the user-id
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Bad Request Error for the user-id format: \n\tuserid: %s, \n\terr: %w", userID, err)
+		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Bad Request Error for the user-id format: \n\tuserid: %s", userID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Server Error: \n\tuserid: %s, \n\terr: %w", userID, err)
+		ctx.Logger.WithError(err).Errorf("GetUserProfilePicture: Server Error: \n\tuserid: %s", userID)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -63,7 +63,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.Printf("GetUserProfilePicture: Not found: \n\tUserID: %s, \n\tPhotoID: %s, \n\terr: %w", userID, photoID, err)
+		ctx.Logger.Printf("GetUserProfilePicture: Not found: \n\tUserID: %s, \n\tPhotoID: %s", userID, photoID)
 		w.WriteHeader(http.StatusNotFound)
 		return
 
@@ -76,7 +76,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 	}
 
 	if photoID == "" {
-		ctx.Logger.Printf("GetUserProfilePicture: \n\tThe user does not yet have a profile photo -> PhotoID: %s, \n\terr: %w", photoID, err)
+		ctx.Logger.Printf("GetUserProfilePicture: \n\tThe user does not yet have a profile photo -> PhotoID: %s", photoID)
 		w.WriteHeader(http.StatusNotFound) // --
 		_, _ = w.Write([]byte("The user does not yet have a profile photo"))
 		return
@@ -116,7 +116,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("getSinglePhoto: Server Error in getSinglePhoto: %w", err)
+		ctx.Logger.WithError(err).Error("getSinglePhoto: Server Error in getSinglePhoto")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -134,7 +134,7 @@ func (rt *_router) getSinglePhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("getSinglePhoto: Server Error in getSinglePhoto: %w", err)
+		ctx.Logger.WithError(err).Error("getSinglePhoto: Server Error in getSinglePhoto")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

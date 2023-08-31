@@ -191,7 +191,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("unlikePhoto: Bad Request Error for the %s format", id)
+			ctx.Logger.WithError(err).Errorf("unlikePhoto: Bad Request Error for the %s format", id)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 

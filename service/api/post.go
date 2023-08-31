@@ -431,7 +431,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error for UuidCheck \n\tpostID or userID: %s \n\t Error: %w", id, err)
+			ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error for UuidCheck \n\tpostID or userID: %s", id)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
@@ -447,7 +447,7 @@ func (rt *_router) modifyCaption(w http.ResponseWriter, r *http.Request, ps http
 	err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error format for caption PatternCheck: \n\tCaption: %s \n\tError: $w", caption, err)
+		ctx.Logger.WithError(err).Errorf("modifyCaption: Bad Request Error format for caption PatternCheck: \n\tCaption: %s", caption)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -520,7 +520,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Errorf("deletePhoto: Bad Request Error for UuidCheck \n\tpostID or userID: %s \n\t Error: %w", id, err)
+			ctx.Logger.WithError(err).Errorf("deletePhoto: Bad Request Error for UuidCheck \n\tpostID or userID: %s", id)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 

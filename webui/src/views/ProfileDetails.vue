@@ -650,7 +650,7 @@ export default {
     <div class="card-title m-1 text-center" style="font-size: 120px; color: chocolate;">
       {{ user["profile-name"] }}
     </div>
-    <div class="row" v-if="loggedUid===userid">
+    <div class="row ms-2 me-2" style="background-color: aqua;border-color: rgb(233, 6, 66);border-style: double;" v-if="loggedUid===userid">
       <div class="col-md-2 m-1 d-flex justify-content-center">
         <button type="button" class="btn btn-danger" @click="deleteUser">
         Delete Account
@@ -660,7 +660,7 @@ export default {
         <button type="button" class="btn btn-primary" @click="getPrivate">
         See if your profile is set to private or public
         </button>
-        </div>
+      </div>
       <div class="col-md-2 m-1 d-flex justify-content-center">
         <button class="btn btn-primary me-3" type="button" @click="toggleP()">
           {{ !private ? 'Set Private':'Set Public' }}
@@ -677,40 +677,40 @@ export default {
         </button>
       </div>
     </div>
-    <div class="card-header">
-      <div class="row" v-if="showChangeBtn===false && loggedUid===userid">
-        <div class="col-md-6 d-flex justify-content-center">
-          <button type="button" class="btn btn-primary" @click="openIt('C')">
-          Change Profile Pic
-          </button>
-        </div>
-        <div class="col-md-6 d-flex justify-content-center">
-          <button type="button" class="btn btn-primary" @click="deleteUserProfilePicture">
-          Delete Profile Pic
-          </button>
-        </div>
-      </div>
-      <div class="d-flex justify-content-center" v-if="showChangeBtn===true">
-        <label for="picture">Picture:</label>
-        <input type="file" id="picture" @change="uploadPicture" ref="pictureInput" accept="image/png"/>
-        <div v-if="form.pictureError" class="error">Please select a PNG file</div>
-      </div>
-      <div class="row" v-if="showChangeBtn===true">
-        <div class="col-md-6 d-flex justify-content-center">
-          <button :disabled="!isValid" type="button" class="btn btn-primary" @click="closeIt('C')">
-          Change
-          </button>
-        </div>
-        <div class="col-md-6 d-flex justify-content-center">
-          <button type="button" class="btn btn-primary" @click="showChangeBtn=false">
-          Cancel
-          </button>
-        </div>
-      </div>
-    </div>
     <div class="card-body card-with-bg">
       <div class="container d-flex justify-content-center m-1">
         <img class="card-img-top user-icon" :src="profPic" alt="oops, can't load photo!" />
+      </div>
+      <div class="card-header">
+        <div class="row" v-if="showChangeBtn===false && loggedUid===userid">
+          <div class="col-md-6 d-flex justify-content-center">
+            <button type="button" class="btn btn-primary" @click="openIt('C')">
+            Change Profile Pic
+            </button>
+          </div>
+          <div class="col-md-6 d-flex justify-content-center">
+            <button type="button" class="btn btn-primary" @click="deleteUserProfilePicture">
+            Delete Profile Pic
+            </button>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center" v-if="showChangeBtn===true">
+          <label for="picture">Picture:</label>
+          <input type="file" id="picture" @change="uploadPicture" ref="pictureInput" accept="image/png"/>
+          <div v-if="form.pictureError" class="error">Please select a PNG file</div>
+        </div>
+        <div class="row" v-if="showChangeBtn===true">
+          <div class="col-md-6 d-flex justify-content-center">
+            <button :disabled="!isValid" type="button" class="btn btn-primary" @click="closeIt('C')">
+            Change
+            </button>
+          </div>
+          <div class="col-md-6 d-flex justify-content-center">
+            <button type="button" class="btn btn-primary" @click="showChangeBtn=false">
+            Cancel
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">

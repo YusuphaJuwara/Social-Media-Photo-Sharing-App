@@ -24,7 +24,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
+		ctx.Logger.WithError(err).Errorf("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -34,7 +34,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
+		ctx.Logger.WithError(err).Errorf("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -56,11 +56,11 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Errorf("Token Error: %w \n", err)
+		ctx.Logger.WithError(err).Errorf("Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
+		ctx.Logger.WithError(err).Errorf("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -73,7 +73,7 @@ func (rt *_router) logOut(w http.ResponseWriter, r *http.Request, ps httprouter.
 	//     return
 	// } else
 	if err != nil {
-		ctx.Logger.WithError(err).Errorf("Server Error: %w", err)
+		ctx.Logger.WithError(err).Errorf("Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
