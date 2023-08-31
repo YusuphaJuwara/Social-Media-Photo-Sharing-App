@@ -91,7 +91,8 @@ type AppDatabase interface {
 	// The user with userID unfollows the user with followID
 	UnfollowUser(userID, followID, token string) error
 
-	GetBanUsers(userID, token string) ([]string, error)
+	// First slice with ID's he bans and second slice with IDs who banned him
+	GetBanUsers(userID, token string) ([]string, []string, error)
 
 	// The user with userID bans the user with banID
 	BanUser(userID, banID, token string) error

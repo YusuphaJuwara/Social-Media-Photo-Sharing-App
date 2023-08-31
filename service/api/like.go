@@ -16,13 +16,13 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("GetLikes: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetLikes: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -34,13 +34,13 @@ func (rt *_router) getLikes(w http.ResponseWriter, r *http.Request, ps httproute
 	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the post-id format")
+		ctx.Logger.WithError(err).Error("GetLikes: Bad Request Error for the post-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetLikes: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

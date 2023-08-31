@@ -16,13 +16,13 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -34,13 +34,13 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -50,7 +50,7 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetUserFollows: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -61,13 +61,13 @@ func (rt *_router) getUserFollows(w http.ResponseWriter, r *http.Request, ps htt
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not Found")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Not Found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetUserFollows: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

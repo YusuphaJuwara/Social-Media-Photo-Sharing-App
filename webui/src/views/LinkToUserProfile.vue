@@ -1,5 +1,4 @@
-<!-- Global scope -->
-<style>
+<style scoped>
 .card {
 	margin-bottom: 20px;
 }
@@ -77,13 +76,5 @@ export default {
 				</h5>
 			</div>
 		</a>
-		<!-- <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-        @click="userProfile()">
-			<div class="d-flex align-items-center">
-				<img class="imgThumbNail me-2 mb-2" :src="profpic" alt="Opps! error" />
-				<h5 class="user-name ms-2 mb-2" :class="{ 'highlighted': highlightProfile }">{{ userprofname}}
-				</h5>
-			</div>
-		</a> -->
   </div>
 </template>

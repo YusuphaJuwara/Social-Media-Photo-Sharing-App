@@ -727,6 +727,7 @@ func (db *appdbimpl) Search(token string, search string) ([]string, []string, er
 		return nil, nil, err
 	}
 
+	
 	var posts []string
 	rows, err = db.c.Query(`SELECT post.id FROM post INNER JOIN hashtag ON post.id = hashtag.postid WHERE hashtag = ? AND NOT EXISTS (SELECT * FROM ban WHERE bannerid = post.userid AND bannedid = ?) `, search, userid)
 	if err != nil {
@@ -739,6 +740,16 @@ func (db *appdbimpl) Search(token string, search string) ([]string, []string, er
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// Check for 'sqlBanFollowCheck
+		err = db.c.QueryRow(sqlBanFollowCheck, pid, userid, userid, userid).Scan(&pid)
+		if errors.Is(err, sql.ErrNoRows) || pid == "" {
+			return nil, nil, structs.ErrNotFound // not found or banned or (private = true and unfollow)
+		} else if err != nil {
+			return nil, nil, err
+		}
+
+		// Everything is ok. Now get the hashtags
 		posts = append(posts, pid)
 	}
 	if err = rows.Err(); err != nil {
@@ -765,17 +776,17 @@ func (db *appdbimpl) GetUserFollows(userID, token string) ([]string, []string, e
 	}
 
 	// Anyone who does not follow a user and the user sets his profile to private, then cannot see any other details of the user except the user profile information including whether or not the user set it to private.
-	sqlfollowCheck := `SELECT count(*) FROM follow as f1 INNER JOIN user ON f1.followingid = user.id WHERE 
-							f1.followingid = ? AND user.private = 1 AND NOT EXISTS (
-								SELECT * FROM follow as f2 WHERE f2.followingid = f1.followingid AND f2.followerid = ?)`
+	// sqlfollowCheck := `SELECT count(*) FROM follow as f1 INNER JOIN user ON f1.followingid = user.id WHERE 
+	// 						f1.followingid = ? AND user.private = 1 AND NOT EXISTS (
+	// 							SELECT * FROM follow as f2 WHERE f2.followingid = f1.followingid AND f2.followerid = ?)`
 
-	i := 0
-	err = db.c.QueryRow(sqlfollowCheck, userID, userid).Scan(&i)
-	if i > 0 { // if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil, structs.ErrNotFound
-	} else if err != nil {
-		return nil, nil, err
-	}
+	// i := 0
+	// err = db.c.QueryRow(sqlfollowCheck, userID, userid).Scan(&i)
+	// if i > 0 { // if errors.Is(err, sql.ErrNoRows) {
+	// 	return nil, nil, structs.ErrNotFound
+	// } else if err != nil {
+	// 	return nil, nil, err
+	// }
 
 	var followerids []string
 	rows, err := db.c.Query("SELECT f1.followerid FROM follow as f1 WHERE f1.followingid = ?", userID)
@@ -875,38 +886,57 @@ func (db *appdbimpl) UnfollowUser(userID, followID, token string) error {
 	return err // Internal Server Error if error is not nil
 }
 
-// users who are banned by the userID
-func (db *appdbimpl) GetBanUsers(userID, token string) ([]string, error) {
-	userid, err := sessionCheck(token, db.c)
+// First slice with user ID's he bans and second slice with user IDs who banned him
+func (db *appdbimpl) GetBanUsers(userID, token string) ([]string, []string, error) {
+	_, err := sessionCheck(token, db.c)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, structs.ErrUnAuth
+		return nil, nil, structs.ErrUnAuth
 	} else if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// Only the user himself can see his banned list
-	if userID != userid {
-		return nil, structs.ErrForbidden
-	}
+	// if userID != userid {
+	// 	return nil, nil, structs.ErrForbidden
+	// }
 	var bannedids []string
 	rows, err := db.c.Query(`SELECT b1.bannedid FROM ban as b1 WHERE b1.bannerid = ?`, userID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var pid string
 		err = rows.Scan(&pid)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		bannedids = append(bannedids, pid)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return bannedids, nil
+	var bannerids []string
+	rows, err = db.c.Query(`SELECT b1.bannerid FROM ban as b1 WHERE b1.bannedid = ?`, userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var pid string
+		err = rows.Scan(&pid)
+		if err != nil {
+			return nil, nil, err
+		}
+		bannerids = append(bannerids, pid)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return bannerids, bannedids, nil
 }
 
 // The user with userID bans the user with banID

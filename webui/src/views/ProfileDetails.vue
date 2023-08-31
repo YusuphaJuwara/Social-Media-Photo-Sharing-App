@@ -13,8 +13,8 @@
 }
 
 .user-icon {
-	width: 500px;
-	height: 500px;
+	width: 50%;
+	height: 50%;
   vertical-align: middle;
 	border-radius: 50%;
 	object-fit: cover;
@@ -31,6 +31,7 @@
 
 export default {
   props: ['userid'],
+
 	data() {
 		return {
       errormsg: null,
@@ -38,14 +39,20 @@ export default {
       loggedUid: '',
       user: {},
       profPic: null,
+
       profilePicsFollower: [],
       profilePicsFollowing: [],
       profilePicsBan: [],
+
       followers: [],
       followings: [],
+      banners: [],
+      banneds: [],
+
       userFollowers: [],
       userFollowings: [],
       userBans: [],
+
 			isValid: false,
 			form: {
         picture: null,
@@ -54,7 +61,6 @@ export default {
       showChangeBtn: false,
       fol: false,
 
-      banUsers: [],
       ban: false,
       private: false,
 
@@ -65,7 +71,9 @@ export default {
       gender: null,
       bdate: null,
 
-      highlightProfile: false,
+      showBan: false, 
+      showFollowing: false, 
+      showFollower: false,
 
     }
 	},
@@ -83,32 +91,6 @@ export default {
   },
 
   methods: {
-    async userProfile() {
-			this.highlightProfile = !this.highlightProfile
-
-			if (this.loggedUid===this.userid){
-				this.$router.push("/profile");
-				console.log("userProfile(): this.loggedUid===this.userid. \nuserid: "+this.userid+"\nloggedUid: "+this.loggedUid)
-			} else {
-				this.$router.push("/"+this.userid+"/profile");
-				console.log("userProfile(): this.loggedUid===this.userid. \nuserid: "+this.userid+"\nloggedUid: "+this.loggedUid);
-			}
-		},
-
-    // async getUserProfile() {
-    //   this.loading = true;
-    //   this.errormsg = null;
-    //   try {
-    //     const response = await this.$axios.get("/users/"+this.userid);
-    //     this.user = response.data;
-    //     // this.user = await this.getUserProfile();
-    //     await this.getUserProfilePicture();
-    //   } catch (e) {
-    //     this.errormsg = e.toString();
-    //   } finally {
-		// 		this.loading = false;
-		// 	}
-    // },
 		async getUserProfile() {
       console.log("ProfileDetails.vue -> getUserProfile(): userid: "+this.userid)
       this.user = await this.getProfile(this.userid);
@@ -117,10 +99,6 @@ export default {
       console.log("ProfileDetails.vue -> getUserProfile(): user: "+this.user)
       console.log("ProfileDetails.vue -> getUserProfile(): profPic: "+this.profPic)
 
-      this.profname = "this.user['profile-name']"
-      this.profmsg = "this.user['profile-message']"
-      this.gender = "this.user['gender']"
-      this.bdate = "this.user['birth_date']"
       if (this.user){
         this.profname = this.user['profile-name']
         this.profmsg = this.user['profile-message']
@@ -131,13 +109,10 @@ export default {
       const response = await this.$axios.get("/users/" + this.userid + "/private-profile");
       this.private = response.data ? true : false
 
-      console.log("ProfileDetails.vue -> getUserProfile(): this.private = response.data ? true : false: "+this.private+"\nresponse.data"+response.data)
+      console.log("ProfileDetails.vue -> getUserProfile(): \nthis.private = response.data ? true : false: "+this.private+"\nresponse.data"+response.data)
 
+      await this.getBanUsers();
       await this.getUserFollows();
-
-      if (this.userid===this.uid){
-        await this.getBanUsers();
-      }
     },
 
     async updateUserProfile() {
@@ -326,31 +301,36 @@ export default {
 			this.loading = true;
 			this.errormsg = null;
 			try {
+
         this.profilePicsFollower = [];
         for (const follower of this.followers) {
           console.log("getFollowProfilePicture(): this.followers: "+this.followers)
-          const fUid = follower
-          // const response = await this.$axios.get(`/users/"${fUid}/profile-picture`, {responseType: "blob"});
-          // const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
-          console.log("getFollowProfilePicture(): before call to this.getUserProfilePicture(fUid). fUid: "+fUid)
-          const photo = await this.getUserProfilePicture(fUid)
-          this.profilePicsFollower.push(photo);
-          console.log("getFollowProfilePicture(): \nbanned['user-id']: "+fUid);
-          console.log("getFollowProfilePicture(): \nphoto: "+photo);
+
+          if (this.banners.includes(follower)){
+            this.profilePicsFollower.push("unknown");
+            console.log("getFollowProfilePicture(): follower banned: ");
+          } else {
+            const photo = await this.getUserProfilePicture(follower)
+            this.profilePicsFollower.push(photo);
+            console.log("getFollowProfilePicture(): \nphoto: "+photo);
+          }
+
           console.log("getFollowProfilePicture(): \nthis.profilePicsFollower.push(photo): "+this.profilePicsFollower);
         }
 
         this.profilePicsFollowing = [];
         for (const following of this.followings) {
           console.log("getFollowProfilePicture(): this.followings: "+this.followings)
-          const fUid = following;
-          // const response = await this.$axios.get(`/users/"${fUid}/profile-picture`, {responseType: "blob"});
-          // const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
-          console.log("getFollowProfilePicture(): before call to this.getUserProfilePicture(fUid). fUid: "+fUid)
-          const photo = await this.getUserProfilePicture(fUid)
-          this.profilePicsFollowing.push(photo);
-          console.log("getFollowProfilePicture(): \nbanned['user-id']: "+fUid);
-          console.log("getFollowProfilePicture(): \nphoto: "+photo);
+
+          if (this.banners.includes(following)){
+            this.profilePicsFollowing.push("unknown");
+            console.log("getFollowProfilePicture(): following banned: ");
+          } else {
+            const photo = await this.getUserProfilePicture(following)
+            this.profilePicsFollowing.push(photo);
+            console.log("getFollowProfilePicture(): \nphoto: "+photo);
+          }
+
           console.log("getFollowProfilePicture(): \nthis.profilePicsFollowing.push(photo): "+this.profilePicsFollowing);
         }
 			} catch (e) {
@@ -364,16 +344,24 @@ export default {
 
 			this.userFollowers = [];
 			for (const follower of this.followers) {
-				const fUid = follower
-				const uDet = await this.getProfile(fUid);
-				this.userFollowers.push(uDet['profile-name'])
+        if (this.banners.includes(follower)){
+          this.userFollowers.push("unknown");
+          console.log("getBanProfilePicture(): follower banned");
+        } else {
+          const uDet = await this.getProfile(follower);
+          this.userFollowers.push(uDet['profile-name'])
+        }
 			}
 
 			this.userFollowings = [];
 			for (const following of this.followings) {
-				const fUid = following
-				const uDet = await this.getProfile(fUid);
-				this.userFollowings.push(uDet['profile-name'])
+        if (this.banners.includes(following)){
+          this.userFollowings.push("unknown");
+          console.log("getBanProfilePicture(): following banned");
+        } else {
+          const uDet = await this.getProfile(following);
+          this.userFollowings.push(uDet['profile-name'])
+        }
 			}
 		},
 
@@ -382,14 +370,18 @@ export default {
 			this.errormsg = null;
 			try {
         this.profilePicsBan = [];
-        for (const banned of this.banUsers) {
-          const fUid = banned
-          // const response = await this.$axios.get(`/users/"${fUid}/profile-picture`, {responseType: "blob"});
-          // const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
-          const photo = await this.getUserProfilePicture(fUid)
-          this.profilePicsBan.push(photo);
-          console.log("getBanProfilePicture(): \nbanned['user-id']: "+fUid);
-          console.log("getBanProfilePicture(): \nphoto: "+photo);
+        for (const banned of this.banneds) {
+
+          // If they ban each other
+          if (this.banners.includes(banned)){
+            this.profilePicsBan.push("unknown");
+            console.log("getBanProfilePicture(): they banned each other");
+          } else {
+            const photo = await this.getUserProfilePicture(banned)
+            this.profilePicsBan.push(photo);
+            console.log("getBanProfilePicture(): they didn't ban each other");
+          }
+
           console.log("getBanProfilePicture(): \nthis.profilePicsBan.push(photo): "+this.profilePicsBan);
         }
 			} catch (e) {
@@ -401,10 +393,15 @@ export default {
 
     async getBanProfiles(){
 			this.userBans = [];
-      if (this.banUsers != null){
-        for (const banned of this.banUsers) {
-            const fUid = banned
-          const uDet = await this.getProfile(fUid);
+      for (const banned of this.banneds) {
+        this.userBans = [];
+
+        // If they ban each other
+        if (this.banners.includes(banned)){
+          this.userBans.push("unknown");
+          console.log("getBanProfilePicture(): they banned each: ");
+        } else {
+          const uDet = await this.getProfile(banned);
           this.userBans.push(uDet['profile-name'])
         }
       }
@@ -416,9 +413,17 @@ export default {
       try {
         const response = await this.$axios.get("/users/"+this.userid+"/follow");
 
+        this.followers = [];
         if (response.data['followers-array'] != null){
           this.followers = response.data['followers-array'];
+
+          // Check if the logged in user follows the user whose info is been requested.
+          if (response.data['followers-array'].includes(this.loggedUid)){
+						this.fol = true;
+					}
         }
+
+        this.followings = [];
         if (response.data['followings-array'] != null){
           this.followings = response.data['followings-array'];
         }
@@ -468,17 +473,32 @@ export default {
       this.loading = true;
       this.errormsg = null;
       try {
-        const response = await this.$axios.get("/users/"+this.userid+"/ban");
+        const response = await this.$axios.get("/users/"+this.loggedUid+"/ban");
         console.log("getBanUsers(): response.data: "+response.data)
 
-        this.banUsers = [];
-        if (response.data != null) {
-          this.banUsers = response.data
+        // Those who banned him
+        this.banners = [];
+        if (response.data['banners'] != null){
+          this.banners = response.data['banners'];
+          console.log("getBanUsers(): banners: "+this.banners);
+        }
+
+        // Those whom he banned
+        this.banneds = [];
+        if (response.data['banneds'] != null){
+          this.banneds = response.data['banneds'];
+          console.log("getBanUsers(): banneds: "+this.banneds);
+
+          // Check if the logged in user bans the user whose info is been requested.
+          if (this.banneds.includes(this.userid)){
+						this.ban = true;
+					}
+        }
+
+        if (this.loggedUid===this.userid){
           await this.getBanProfilePicture();
           await this.getBanProfiles();
         }
-
-        console.log("getBanUsers(): banUsers: "+this.banUsers)
 
       } catch (e) {
         this.errormsg = "getBanUsers():\nerror: "+e.toString()+"\nthis.userid: "+this.userid;
@@ -505,11 +525,11 @@ export default {
       }
     },
 
-    async unbanUser() {
+    async removeBanHelperFunc(uid) {
       this.loading = true;
       this.errormsg = null;
       try {
-        await this.$axios.delete("/users/"+this.loggedUid+"/ban/"+this.userid);
+        await this.$axios.delete("/users/"+this.loggedUid+"/ban/"+uid);
 
         // refresh...
         // await this.getBanUsers();
@@ -519,6 +539,10 @@ export default {
       } finally {
           this.loading = false;
       }
+    },
+
+    async unbanUser() {
+      await this.removeBanHelperFunc(this.userid)
     },
 
     uploadPicture(event) {
@@ -568,20 +592,35 @@ export default {
       this.isUsernameValid = regExp.test(this.username);
 		},
 
-    openIt(p){
+    async openIt(p){
 			this.showChangeBtn = false;
+      this.showFollower = false;
+      this.showFollowing = false;
+      this.showBan = false;
 
       if (p === "C"){
         this.showChangeBtn = true;
+      } else if (p === "R") {
+        this.showFollower = true;
+        await this.getUserFollows();
+      } else if (p === "G") {
+        this.showFollowing = true;
+        await this.getUserFollows();
+      } else if (p === "B") {
+        this.showBan = true;
+        await this.getBanUsers();
       }
     },
 
     async closeIt(p){
       this.showChangeBtn = false;
+      this.showFollower = false;
+      this.showFollowing = false;
+      this.showBan = false;
 
       if (p === "C"){
         await this.changeUserProfilePicture();
-      }
+      } 
     }
 
 	},
@@ -702,129 +741,71 @@ export default {
       </p>
     </div>
     <div class="card-footer justify-content-between d-grid gap-2 d-md-block">
-      <button type="button" class="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#staticBackdropFollower">Followers {{ user['follower-count'] }}</button>
-
-      <button type="button" class="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#staticBackdropFollowing">Followings {{ user['following-count'] }}</button>
-
+      <button type="button" class="btn btn-primary me-3" @click="openIt('R')">Followers {{ user['follower-count'] }}</button>
+      <button type="button" class="btn btn-primary me-3" @click="openIt('G')">Followings {{ user['following-count'] }}</button>
       <button v-if="loggedUid != userid" class="btn btn-primary me-3" type="button" @click="toggleFollow()">
         {{ !fol ? 'Follow':'Unfollow' }}
       </button>
-
-      <button v-if="loggedUid===userid" type="button" class="btn btn-primary me-3" data-bs-toggle="modal" data-bs-target="#staticBackdropBan">Banned {{ banUsers.length }}</button>
-
+      <button type="button"  v-if="loggedUid===userid" class="btn btn-primary me-3" @click="openIt('B')">Banned {{ banneds.length }}</button>
       <button v-if="loggedUid != userid" class="btn btn-primary me-3" type="button" @click="toggleBan()">
         {{ !ban ? 'Ban':'Remove Ban' }}
       </button>
     </div>
-
   </div>
 
-  <!-- Modal for followers-->
-  <div class="modal fade" id="staticBackdropFollower" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-      aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="staticBackdropLabel">Users who followed you</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" v-for="(uid, idx) in followers" :key="uid">
-            <div class="card mb-3 p-2">
-              <div class="card-text m-2">UID: {{ uid }}</div>
-              <div class="card-text m-2">profilePicsFollower[idx]: {{ profilePicsFollower[idx] }}</div>
-              <div class="card-text m-2">userFollowers[idx]: {{ userFollowers[idx] }}</div>
-              <div class="card-header">
-                <!-- <LinkToUserProfile
-                  :profpic="profilePicsFollower[idx]" 
-                  :userprofname="userFollowers[idx]"
-                  :uid="uid">
-                </LinkToUserProfile> -->
-                <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-                    @click="userProfile()">
-                  <div class="d-flex align-items-center">
-                    <img class="imgThumbNail me-2 mb-2" :src="profilePicsFollower[idx]" alt="Opps! error" />
-                    <h5 class="user-name ms-2 mb-2" :class="{ 'highlighted': highlightProfile }">{{ userFollowers[idx] }}
-                    </h5>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
+  <!-- Followers -->
+  <div class="container mt-3 mb-2" style="border: 2px solid violet;" v-if="showFollower && followers.length>0">
+    <div class="card m-2 p-2">
+      <div class="card-header m-2 p-1">Users who followed you</div>
+      <div v-for="(uid, idx) in followers" :key="uid">
+        <div class="card-header">
+          <LinkToUserProfile v-if="!banners.includes(uid)"
+            :profpic="profilePicsFollower[idx]" 
+            :userprofname="userFollowers[idx]"
+            :uid="uid">
+          </LinkToUserProfile>
+
+          <NoLinkToUserProfile v-if="banners.includes(uid)" ></NoLinkToUserProfile>
         </div>
       </div>
+    </div>
   </div>
 
-  <!-- Modal for followings-->
-  <div class="modal fade" id="staticBackdropFollowing" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-      aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="staticBackdropLabel">Users whom you followed</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" v-for="(uid, idx) in followings" :key="uid">
-            <div class="card mb-3 p-2">
-              <div class="card-header">
-                <!-- <LinkToUserProfile
-                  :profpic="profilePicsFollowing[idx]" 
-                  :userprofname="userFollowings[idx]"
-                  :uid="uid">
-                </LinkToUserProfile> -->
-                <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-                    @click="userProfile()">
-                  <div class="d-flex align-items-center">
-                    <img class="imgThumbNail me-2 mb-2" :src="profilePicsFollowing[idx]" alt="Opps! error" />
-                    <h5 class="user-name ms-2 mb-2" :class="{ 'highlighted': highlightProfile }">{{ userFollowings[idx] }}
-                    </h5>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
+  <!-- Followings -->
+  <div class="container mt-3 mb-2" style="border: 2px solid violet;" v-if="showFollowing && followings.length>0">
+    <div class="card m-2 p-2">
+      <div class="card-header m-2 p-1"> Users whom you followed </div>
+      <div v-for="(uid, idx) in followings" :key="uid">
+        <div class="card-header">
+          <LinkToUserProfile v-if="!banners.includes(uid)"
+            :profpic="profilePicsFollowing[idx]" 
+            :userprofname="userFollowings[idx]"
+            :uid="uid">
+          </LinkToUserProfile>
+
+          <NoLinkToUserProfile v-if="banners.includes(uid)" ></NoLinkToUserProfile>
         </div>
       </div>
+    </div>
   </div>
 
-  <!-- Modal for ban-->
-  <div class="modal fade" id="staticBackdropBan" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-      aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="staticBackdropLabel">Users whom you banned</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" v-for="(uid, idx) in banUsers" :key="uid">
-            <div class="card mb-3 p-2">
-              <div class="card-header">
-                <!-- <LinkToUserProfile
-                  :profpic="profilePicsBan[idx]" 
-                  :userprofname="userBans[idx]"
-                  :uid="uid">
-                </LinkToUserProfile> -->
-                <a href="javascript:" @mouseover="highlightProfile=true" @mouseout="highlightProfile=false"
-                    @click="userProfile()">
-                  <div class="d-flex align-items-center">
-                    <img class="imgThumbNail me-2 mb-2" :src="profilePicsBan[idx]" alt="Opps! error" />
-                    <h5 class="user-name ms-2 mb-2" :class="{ 'highlighted': highlightProfile }">{{ userBans[idx] }}
-                    </h5>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
+  <!-- Ban -->
+  <div class="container mt-3 mb-2" style="border: 2px solid violet;" v-if="showBan && banneds.length>0">
+    <div class="card m-2 p-2">
+      <div class="card-header m-2 p-1"> Users whom you banned </div>
+      <div v-for="(uid, idx) in banneds" :key="uid">
+        <div class="card-header">
+          <LinkToUserProfile v-if="!banners.includes(uid)"
+            :profpic="profilePicsBan[idx]" 
+            :userprofname="userBans[idx]"
+            :uid="uid">
+          </LinkToUserProfile>
+
+          <NoLinkToUserProfile v-if="banners.includes(uid)" ></NoLinkToUserProfile>
+          <button type="button" class="btn btn-primary m-2" @click="removeBanHelperFunc(uid)">Remove Ban</button>
         </div>
       </div>
+    </div>
   </div>
 
   <!-- Modal: modify user details -->

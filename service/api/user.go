@@ -255,13 +255,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("GetUserProfile: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserProfile: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -273,13 +273,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("GetUserProfile: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserProfile: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -289,7 +289,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetUserProfile: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -300,13 +300,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("user-id not found")
+		ctx.Logger.WithError(err).Error("GetUserProfile: user-id not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetUserProfile: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

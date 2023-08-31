@@ -2,12 +2,8 @@
 </style>
 
 <script>
-import LinkToUserProfile from "./LinkToUserProfile.vue"
 
 export default {
-	components: {
-		LinkToUserProfile
-	},
 	data() {
 		return {
 			errormsg: null,

@@ -10,15 +10,13 @@
 	object-fit: cover;
 }
 
-/* .user-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
+.user-icon {
+	width: 50%;
+	height: 50%;
+  vertical-align: middle;
 	object-fit: cover;
-	margin-right: 8px;
 	display: inline-block;
-} */
-
+}
 .user-name {
 	color: #333;
 	cursor: pointer;
@@ -32,18 +30,11 @@
 </style>
 
 <script>
-import LinkToUserProfile from "./LinkToUserProfile.vue"
-
 export default {
   props: ['postid'],
 
-	components: {
-		LinkToUserProfile
-	},
-
 	data() {
 		return {
-			// postid: '',
       userid: '',
 			hashtags: '',
 			addhashtags: '',
@@ -61,6 +52,8 @@ export default {
 			user: {},
 			userLikes: [],
 			userComments: [],
+			banners: [],
+      banneds: [],
 
 			profilePicsComment: [],
 			profilePicsLike: [],
@@ -79,16 +72,36 @@ export default {
 	},
   methods: {
 		async getLikeAndCommentProfiles(){
+
 			this.userComments = [];
-			for (const comment of this.comments){
-				const uDet = await this.getUserProfile(comment['user-id']);
-				this.userComments.push(uDet['profile-name'])
+			for (const comment of this.comments) {
+				const cUid = comment['user-id']
+				if (this.banners.includes(cUid)){
+					this.userComments.push("unknown");
+					console.log("getLikeAndCommentProfiles(): banned");
+				} else {
+					const uDet = await this.getUserProfile(cUid);
+					this.userComments.push(uDet['profile-name'])
+					console.log("getLikeAndCommentProfiles(): \nuDet: "+uDet);
+				}
+
+				console.log("getLikeAndCommentProfiles(): \nthis.profilePicsComment.push(photo): "+this.userComments);
 			}
 
 			this.userLikes = [];
-			for (const lUid of this.likes['user-ids']){
-				const uDet = await this.getUserProfile(lUid);
-				this.userLikes.push(uDet['profile-name'])
+			for (const lUid of this.likes['user-ids']) {
+				console.log("getLikeAndCommentProfiles(): this.likes['user-ids']: "+this.likes['user-ids'])
+
+				if (this.banners.includes(lUid)){
+					this.userLikes.push("unknown");
+					console.log("getLikeAndCommentProfiles(): banned");
+				} else {
+					const uDet = await this.getUserProfile(lUid);
+					this.userLikes.push(uDet['profile-name'])
+					console.log("getLikeAndCommentProfiles(): \nuDet: "+uDet);
+				}
+
+				console.log("getLikeAndCommentProfiles(): \nthis.profilePicsComment.push(photo): "+this.userLikes);
 			}
 		},
 
@@ -224,7 +237,7 @@ export default {
 				// refresh...
 				// await this.getPhoto();
 			} catch (e) {
-				this.errormsg = e.toString();
+				this.errormsg = "getSinglePhoto(pUid) error: ------ "+e.toString();
 			} finally {
 				this.loading = false;
 			}
@@ -237,29 +250,47 @@ export default {
 			try {
 
 				if (getOne===true){
+
 					this.profilePicsComment = [];
 					for (const comment of this.comments) {
-						var cUid = comment['user-id']
-						const response = await this.$axios.get(`/users/"${cUid}/profile-picture`, {responseType: "blob"});
-						const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
-						this.profilePicsComment.push(photo);
+						const cUid = comment['user-id']
+						if (this.banners.includes(cUid)){
+							this.profilePicsComment.push("unknown");
+							console.log("getCommentProfilePicture(): banned: ");
+						} else {
+							const response = await this.$axios.get(`/users/"${cUid}/profile-picture`, {responseType: "blob"});
+							const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
+							this.profilePicsComment.push(photo);
+							console.log("getCommentProfilePicture(): \nphoto: "+photo);
+						}
+
+						console.log("getCommentProfilePicture(): \nthis.profilePicsComment.push(photo): "+this.profilePicsComment);
 					}
 
 					this.profilePicsLike = [];
 					for (const lUid of this.likes['user-ids']) {
-						const response = await this.$axios.get(`/users/"${lUid}/profile-picture`, {responseType: "blob"});
-						const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
-						this.profilePicsLike.push(photo);
-						console.log("for each likes['user-ids']" + lUid)
+						console.log("getLikesProfilePicture(): this.likes[user-ids]: "+this.likes['user-ids'])
+
+						if (this.banners.includes(lUid)){
+							this.profilePicsLike.push("unknown");
+							console.log("getLikesProfilePicture(): banned: ");
+						} else {
+							const response = await this.$axios.get(`/users/"${lUid}/profile-picture`, {responseType: "blob"});
+							const photo = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
+							this.profilePicsLike.push(photo);
+							console.log("getLikesProfilePicture(): \nphoto: "+photo);
+						}
+
+						console.log("getLikesProfilePicture(): \nthis.profilePicsComment.push(photo): "+this.profilePicsLike);
 					}
+
 				} else {
 					const response = await this.$axios.get(`/users/"${this.user['user-id']}/profile-picture`, {responseType: "blob"})
 					this.uProfPic = URL.createObjectURL(new Blob([response.data]), { type: "image/png" });
 					
 				}
-				console.log("likes['user-ids']" + this.likes['user-ids'])
 			} catch (e) {
-				this.errormsg = e.toString();
+				this.errormsg = "---getLikesProfilePicture(): --- "+e.toString();
 			} finally {
 				this.loading = false;
 			}
@@ -273,11 +304,12 @@ export default {
 				this.comments = response.data;
 
 				// refresh to get updated commenters and likers profPics
+				await this.getBanUsers();
 				await this.getUserProfilePicture(true);
 				await this.getLikeAndCommentProfiles();
 				await this.getPhoto();
 			} catch (e) {
-				this.errormsg = e.toString();
+				this.errormsg = "getPhotoComments() error: "+e.toString();
 			} finally {
 				this.loading = false;
 			}
@@ -330,14 +362,15 @@ export default {
 					this.likes['user-ids'] = [];
 					this.likes['like-count'] = 0;
 					this.like = false;
-					console.log("likes['user-ids'] is null"+this.likes['user-ids'])
+					console.log("getLikes(): likes['user-ids'] is null: "+this.likes['user-ids'])
 				} else {
 					// Check if user's ID is in likes['user-ids']
 					this.like = this.likes['user-ids'].includes(this.userid);
-					console.log("else userids is not null. like: "+this.like+"likes: "+this.likes)
+					console.log("getLikes(): likes['user-ids'] is not null. like: "+this.like+"\nlikes['user-ids']: "+this.likes['user-ids'])
 				}
 
 				// refresh to get updated commenters and likers profPics
+				await this.getBanUsers();
 				await this.getUserProfilePicture(true);
 				await this.getLikeAndCommentProfiles();
 
@@ -375,6 +408,33 @@ export default {
 				this.loading = false;
 			}
 		},
+
+		async getBanUsers() {
+      this.loading = true;
+      this.errormsg = null;
+      try {
+        const response = await this.$axios.get("/users/"+this.userid+"/ban");
+        console.log("Post.vue -> getBanUsers(): response.data: "+response.data)
+
+        // Those who banned him
+        this.banners = [];
+        if (response.data['banners'] != null){
+          this.banners = response.data['banners'];
+          console.log("Post.vue -> getBanUsers(): banners: "+this.banners);
+        }
+
+        // Those whom he banned
+        this.banneds = [];
+        if (response.data['banneds'] != null){
+          this.banneds = response.data['banneds'];
+          console.log("Post.vue -> getBanUsers(): banneds: "+this.banneds);
+        }
+      } catch (e) {
+        this.errormsg = "Post.vue -> getBanUsers():\nerror: "+e.toString()+"\nthis.userid: "+this.userid;
+      } finally {
+				this.loading = false;
+			}
+    },
 
 		toggleLike() {
 			if (this.like) {
@@ -435,13 +495,9 @@ export default {
 
   },
   async mounted(){
-		//this.user = await this.getUserProfile(this.userid); //w
-		//this.postid = this.user['user-post-ids'][0]
     await this.getPhoto();
 
-		this.user = await this.getUserProfile(this.post['user-id']); 
-		// this.userLikes = await this.getUserProfile(this.post['user-id']);
-		// this.userComments = await this.getUserProfile(this.post['user-id']);
+		this.user = await this.getUserProfile(this.post['user-id']);
 
     this.singlePhoto = await this.getSinglePhoto(this.post['photo-id']);
 	
@@ -547,8 +603,8 @@ export default {
 					</div>
 				</div>
 			
-        <div class="container m-5 p-5">
-        	<img class="card-img-top" style="width:100%" :src="singlePhoto" alt="oops, can't load photo!" />
+        <div class="container d-flex justify-content-center m-1">
+        	<img class="card-img-top user-icon" :src="singlePhoto" alt="oops, can't load photo!" />
         </div>
       </div>
 
@@ -576,11 +632,13 @@ export default {
 				<div class="card-header m-2 p-1">Users who liked the post</div>
 				<div v-for="(likeUid, idx) in likes['user-ids']" :key="likeUid">
 					<div class="card-header">
-						<LinkToUserProfile
-						:profpic="profilePicsLike[idx]" 
-						:userprofname="userLikes[idx]"
-						:uid="likeUid">
+						<LinkToUserProfile v-if="!banners.includes(likeUid)"
+							:profpic="profilePicsLike[idx]" 
+							:userprofname="userLikes[idx]"
+							:uid="likeUid">
 						</LinkToUserProfile>
+
+						<NoLinkToUserProfile v-if="banners.includes(likeUid)" ></NoLinkToUserProfile>
 					</div>
 				</div>
 			</div>
@@ -612,11 +670,13 @@ export default {
 					<div class="card-header mt-1 p-1">
 						<div class="row">
 							<div class="col-md-9">
-								<LinkToUserProfile
-								:profpic="profilePicsComment[idx]" 
-								:userprofname="userComments[idx]"
-								:uid="comment['user-id']">
+								<LinkToUserProfile v-if="!banners.includes(comment['user-id'])"
+									:profpic="profilePicsComment[idx]" 
+									:userprofname="userComments[idx]"
+									:uid="comment['user-id']">
 								</LinkToUserProfile>
+
+								<NoLinkToUserProfile v-if="banners.includes(comment['user-id'])" ></NoLinkToUserProfile>
 							</div>
 							<div class="col-md-3 justify-content-end">
 								<button v-if="userid===comment['user-id'] || userid==post['user-id']" @click="uncommentPhoto(comment['comment-id'])">Delete</button>

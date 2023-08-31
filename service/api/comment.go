@@ -13,11 +13,11 @@ import (
 func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -27,28 +27,28 @@ func (rt *_router) getPhotoComments(w http.ResponseWriter, r *http.Request, ps h
 	// Check the validity of the post-id
 	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	comments, err := rt.db.GetPhotoComments(token, postID)
 	if errors.Is(err, structs.ErrUnAuth) {
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
 	} else if errors.Is(err, structs.ErrNotFound) {
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err != nil {
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetPhotoComments: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

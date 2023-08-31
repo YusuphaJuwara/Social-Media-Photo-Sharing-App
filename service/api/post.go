@@ -17,13 +17,13 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("GetPhoto: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetPhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -35,13 +35,13 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 	postID, err = structs.UuidCheck(postID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("GetPhoto: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetPhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -51,7 +51,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetPhoto: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -62,13 +62,13 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("GetPhoto: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetPhoto: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -197,13 +197,13 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error: " + r.Header.Get("authorization"))
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Token Error: " + r.Header.Get("authorization"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -215,13 +215,13 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -231,7 +231,7 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Error("User Not Authorized")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -242,13 +242,13 @@ func (rt *_router) getUserPhotos(w http.ResponseWriter, r *http.Request, ps http
 
 	} else if errors.Is(err, structs.ErrNotFound) {
 
-		ctx.Logger.WithError(err).Error("Not found")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Not found")
 		w.WriteHeader(http.StatusNotFound)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Error on our part")
+		ctx.Logger.WithError(err).Error("GetUserPhotos: Error on our part")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -265,13 +265,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	token, err := structs.TokenCheck(r)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Token Error")
+		ctx.Logger.WithError(err).Error("UploadPhoto: Token Error")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("UploadPhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -283,13 +283,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	userID, err = structs.UuidCheck(userID)
 	if errors.Is(err, structs.ErrBadReq) {
 
-		ctx.Logger.WithError(err).Error("Bad Request Error for the user-id format")
+		ctx.Logger.WithError(err).Error("UploadPhoto: Bad Request Error for the user-id format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Error("Server Error")
+		ctx.Logger.WithError(err).Error("UploadPhoto: Server Error")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
@@ -306,7 +306,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// After one call to ParseMultipartForm, subsequent calls have no effect.
 	err = r.ParseMultipartForm(32 << 20)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Error parsing multipart form")
+		ctx.Logger.WithError(err).Error("UploadPhoto: Error parsing multipart form")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 
@@ -329,13 +329,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		err = structs.PatternCheck(structs.MessagePattern, caption, structs.MessageMinLen, structs.MessageMaxLen)
 		if errors.Is(err, structs.ErrBadReq) {
 
-			ctx.Logger.WithError(err).Error("Bad Request Error format for the caption")
+			ctx.Logger.WithError(err).Error("UploadPhoto: Bad Request Error format for the caption")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 
 		} else if err != nil {
 
-			ctx.Logger.WithError(err).Error("Server Error")
+			ctx.Logger.WithError(err).Error("UploadPhoto: Server Error")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 
@@ -353,13 +353,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 			if errors.Is(err, structs.ErrBadReq) {
 
-				ctx.Logger.WithError(err).Errorf("Bad Request Error format for the hashtag: %s", hashtag)
+				ctx.Logger.WithError(err).Errorf("UploadPhoto: Bad Request Error format for the hashtag: %s", hashtag)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 
 			} else if err != nil {
 
-				ctx.Logger.WithError(err).Error("Server Error")
+				ctx.Logger.WithError(err).Error("UploadPhoto: Server Error")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -370,7 +370,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	if errors.Is(err, structs.ErrUnAuth) {
 
-		ctx.Logger.WithError(err).Errorf("User Not Authorized\n postID: %s \nerr %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("UploadPhoto: User Not Authorized\n postID: %s \nerr %v", postID, err)
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
 		// w.Header().Add("www-authenticate", "Bearer ")
@@ -381,13 +381,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
-		ctx.Logger.WithError(err).Errorf("Forbidden Error\n postID: %s \nerr %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("UploadPhoto: Forbidden Error\n postID: %s \nerr %v", postID, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
 
 	} else if err != nil {
 
-		ctx.Logger.WithError(err).Errorf("Error on our part\n postID: %s \nerr %v", postID, err)
+		ctx.Logger.WithError(err).Errorf("UploadPhoto: Error on our part\n postID: %s \nerr %v", postID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 

@@ -7,6 +7,7 @@ import AllUsersNotBanned from '../views/AllUsersNotBanned.vue'
 import Search from '../views/Search.vue'
 import CreatePost from '../views/CreatePost.vue'
 import Login from '../views/Login.vue'
+import Logout from '../views/Logout.vue'
 
 import ModalA from '../views/ModalA.vue'
 
@@ -21,6 +22,7 @@ const router = createRouter({
 		{path: '/search', component: Search},
 		{path: '/create-post', component: CreatePost},
 		{path: '/', component: Login},
+		{path: '/logout', component: Logout},
 		
 		{path: '/modala', component: ModalA},
 	]

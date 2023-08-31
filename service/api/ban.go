@@ -36,7 +36,7 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	bannedUserIDs, err := rt.db.GetBanUsers(userID, token)
+	bannerUserIDs, bannedUserIDs, err := rt.db.GetBanUsers(userID, token)
 	if errors.Is(err, structs.ErrUnAuth) {
 		ctx.Logger.WithError(err).Error("getBanUsers: User Not Authorized")
 		w.Header().Set("WWW-Authenticate", "Bearer ")
@@ -53,9 +53,14 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	ban := structs.Ban {
+		BannerIDs: bannerUserIDs,
+		BannedIDs: bannedUserIDs,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(bannedUserIDs)
+	_ = json.NewEncoder(w).Encode(ban)
 }
 
 // The user with userID bans the user with banID

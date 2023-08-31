@@ -10,6 +10,7 @@ export default {
 		Post,
 		ProfileDetails,
 	},
+	
 	data() {
 		return {
 			errormsg: null,
@@ -36,10 +37,10 @@ export default {
 			}
     },
 
+		// An event listener to when a post is deleted in Post.vue
 		async onPostDeleted(){
 			await this.getUserProfile();
 		},
-
 
 	},
 	created(){

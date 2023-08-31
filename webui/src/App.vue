@@ -29,6 +29,12 @@ export default {}
 							</RouterLink>
 						</li>
 						<li class="nav-item">
+							<RouterLink to="/logout" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Logout
+							</RouterLink>
+						</li>
+						<li class="nav-item">
 							<RouterLink to="/profile" class="nav-link">
 								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
 								Profile
@@ -56,6 +62,12 @@ export default {}
 							<RouterLink to="/create-post" class="nav-link">
 								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
 								Create Post
+							</RouterLink>
+						</li>
+						<li class="nav-item">
+							<RouterLink to="/search" class="nav-link">
+								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#list"/></svg>
+								Search
 							</RouterLink>
 						</li>
 						<li class="nav-item">

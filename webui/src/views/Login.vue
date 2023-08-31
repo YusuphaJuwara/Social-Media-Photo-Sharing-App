@@ -11,20 +11,23 @@ export default {
 		}
 	},
 	methods: {
-			validateUsername() {
-					const regExp = /^[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*$/;
-					this.isValid = regExp.test(this.username);
-			},
-			async doLogin() {
-				this.loading = true;
-				this.errormsg = null;
+		validateUsername() {
+				const regExp = /^[a-zA-Z0-9]*[a-zA-Z][a-zA-Z0-9]*$/;
+				this.isValid = regExp.test(this.username);
+		},
+
+		async doLogin() {
+			this.loading = true;
+			this.errormsg = null;
+
+			if (this.username != ''){
 				try {
 					const formData = new FormData();
-        	formData.append('username', this.username);
+					formData.append('username', this.username);
 					let response = await this.$axios.post("/session", formData);
 
 					let statusCode = response.status;
-  				this.token = response.headers['authorization']
+					this.token = response.headers['authorization']
 					this.userid = response.data;
 
 					console.log(response);
@@ -45,12 +48,15 @@ export default {
 				} catch (e) {
 					this.errormsg = e.toString();
 				}
-				this.loading = false;
-				this.username = '';
 			}
+			this.loading = false;
+			this.username = '';
+		}
+
 	},
-	mounted(){
-		//this.doLogin();
+
+	async mounted(){
+		await this.doLogin();
 	}
 }
 </script>
@@ -79,6 +85,8 @@ export default {
 				<input type="text" id="loginid" v-model="username" @input="validateUsername" placeholder="Enrico204"/>
 				<button class="btn btn-primary mt-3" type="button" :disabled="!isValid" @click="doLogin">Sign in/up</button>
 			</div>
+
+			<div class="m-5 p-5" style="color:red;font-size: xx-large;">Make sure to login, otherwise you will get an 'Unauthorized' error</div>
 
 		</div>
 </template>
