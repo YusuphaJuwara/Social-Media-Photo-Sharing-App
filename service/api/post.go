@@ -345,11 +345,8 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// r.Form returns values like map[string][]string.
 	hashtags := r.Form["hashtags"]
 
-	//if len(hashtags) > 0 {
-	//ctx.Logger.Printf("All Hashtag: %s, Type: %t", hashtags, hashtags)
 	for _, hashtag := range hashtags {
 		if hashtag != "" {
-			//ctx.Logger.Printf("one Hashtag: %s, Type: %t", hashtag, hashtag)
 			err = structs.PatternCheck(structs.HashtagPattern, hashtag, structs.HashtagMinLen, structs.HashtagMaxLen)
 			if errors.Is(err, structs.ErrBadReq) {
 
@@ -540,17 +537,9 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		ctx.Logger.WithError(err).Error("deletePhoto: User Not Authorized")
 
 		w.Header().Set("WWW-Authenticate", "Bearer ")
-		// w.Header().Add("www-authenticate", "Bearer ")
-
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Must be authorized to access this website"))
 		return
-
-		// } else if errors.Is(err, structs.ErrNotFound) {
-
-		// 	// ctx.Logger.WithError(err).Error("The post is not found. But return No Content")
-		// 	w.WriteHeader(http.StatusNoContent)
-		// 	return
 
 	} else if errors.Is(err, structs.ErrForbidden) {
 
@@ -564,23 +553,6 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	// if photoID == "" {
-	// 	w.WriteHeader(http.StatusNotFound)		// --
-	// 	_, _ = w.Write([]byte("No such photo"))
-	//     return
-
-	// }
-
-	// file := filepath.Join(structs.PicFolder, photoID + ".png")
-
-	// err = os.Remove(file)
-	// if err != nil {
-	// 	ctx.Logger.WithError(err).Error("Error removing file")
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	//     return
-
-	// }
 
 	w.WriteHeader(http.StatusNoContent)
 }

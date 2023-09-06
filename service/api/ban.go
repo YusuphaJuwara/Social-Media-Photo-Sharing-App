@@ -53,7 +53,7 @@ func (rt *_router) getBanUsers(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	ban := structs.Ban {
+	ban := structs.Ban{
 		BannerIDs: bannerUserIDs,
 		BannedIDs: bannedUserIDs,
 	}

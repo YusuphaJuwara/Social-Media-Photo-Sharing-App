@@ -67,6 +67,6 @@ type Follow struct {
 }
 
 type Ban struct {
-	BannerIDs  []string `json:"banners"`
+	BannerIDs []string `json:"banners"`
 	BannedIDs []string `json:"banneds"`
 }

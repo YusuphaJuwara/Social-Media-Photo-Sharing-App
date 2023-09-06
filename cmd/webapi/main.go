@@ -39,7 +39,6 @@ import (
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/database"
 	"github.com/YusuphaJuwara/Social-Media-Photo-Sharing-App.git/service/structs"
 	"github.com/ardanlabs/conf"
-	_ "github.com/ardanlabs/conf"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
@@ -87,11 +86,11 @@ func run() error {
 	if err != nil {
 		logger.WithError(err).Error(err)
 		return fmt.Errorf("error with PicFolder: %w", err)
-	} else {
-		logger.Printf("photo downloaded and saved successfully!"+
-									"\n\tPicFolder: %s \n\tDefault Pic Name: %s", 
-									structs.PicFolder, structs.FileName)
 	}
+
+	logger.Printf("photo downloaded and saved successfully!"+
+		"\n\tPicFolder: %s \n\tDefault Pic Name: %s",
+		structs.PicFolder, structs.FileName)
 
 	logger.Println("initializing database support")
 	dbconn, err := sql.Open("sqlite3", cfg.DB.Filename)

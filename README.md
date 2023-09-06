@@ -150,4 +150,12 @@ exit
 
 See [LICENSE](LICENSE).
 
+## Use golangci-lint and go fmt to format code for best practice
 
+E.g., ```golangci-lint run -E go fumpt```
+enables fumpt with the -E tag
+Use the full part to run this. E.g., 
+/Social-Media-Photo-Sharing-App$ ```/home/wasa/go/bin/golangci-lint run -E revive```
+
+E.g., ```go fmt ./...``` or ```gofmt -w .```
+reformats code

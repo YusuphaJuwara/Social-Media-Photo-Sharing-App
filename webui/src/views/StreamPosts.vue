@@ -24,10 +24,6 @@ export default {
 			try {
 				let response = await this.$axios.get("/users/" + this.userid + "/posts/stream/");
 				this.posts = response.data;
-
-				if (this.posts.length === 0){
-					this.$router.push("/create-post");
-				}
 			} catch (e) {
 				this.errormsg = e.toString();
 			} finally{

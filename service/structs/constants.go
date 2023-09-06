@@ -9,12 +9,10 @@ Here, I define some general constants needed throughout the project.
 
 import "errors"
 
-var (	
-	ErrUnAuth    = errors.New("unauthorized user")
-	ErrForbidden = errors.New("forbidden")
-	ErrNotFound  = errors.New("not found")
-	ErrBadReq    = errors.New("bad request")
-)
+var ErrUnAuth = errors.New("unauthorized user")
+var ErrForbidden = errors.New("forbidden")
+var ErrNotFound = errors.New("not found")
+var ErrBadReq = errors.New("bad request")
 
 // 1. Sql table creation statements' constants
 const (

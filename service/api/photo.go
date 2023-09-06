@@ -77,7 +77,7 @@ func (rt *_router) getUserProfilePicture(w http.ResponseWriter, r *http.Request,
 
 	if photoID == "" {
 		ctx.Logger.Printf("GetUserProfilePicture: \n\tThe user does not yet have a profile photo -> PhotoID: %s", photoID)
-		w.WriteHeader(http.StatusNotFound) // --
+		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte("The user does not yet have a profile photo"))
 		return
 
@@ -221,7 +221,7 @@ func (rt *_router) changeUserProfilePicture(w http.ResponseWriter, r *http.Reque
 		return
 
 	}
-	
+
 	photoID, _, err := rt.db.ChangeUserProfilePicture(userID, token, r)
 
 	if errors.Is(err, structs.ErrUnAuth) {

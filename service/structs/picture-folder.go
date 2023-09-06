@@ -8,11 +8,9 @@ import (
 	"path/filepath"
 )
 
-const(
-	PicFolder = "/tmp/pictures"
-	Url = "https://w7.pngwing.com/pngs/269/897/png-transparent-family-cosmetic-dentistry-family-smile-happy-family-child-photography-people-thumbnail.png"
-	FileName= "ffffffff-ffff-ffff-ffff-ffffffffffff.png"
-)
+const PicFolder = "/tmp/pictures"
+const URL = "https://w7.pngwing.com/pngs/269/897/png-transparent-family-cosmetic-dentistry-family-smile-happy-family-child-photography-people-thumbnail.png"
+const FileName = "ffffffff-ffff-ffff-ffff-ffffffffffff.png"
 
 func PicFolderDownloadAndSavePhoto() error {
 
@@ -32,9 +30,9 @@ func PicFolderDownloadAndSavePhoto() error {
 	fullFilePath := filepath.Join(PicFolder, FileName)
 
 	// Make an HTTP GET request to the URL
-	resp, err := http.Get(Url)
+	resp, err := http.Get(URL)
 	if err != nil {
-		return fmt.Errorf("error downloading default profile photo at App startup: \n\tURL: %s \n\tError: %w", Url, err)
+		return fmt.Errorf("error downloading default profile photo at App startup: \n\tURL: %s \n\tError: %w", URL, err)
 	}
 	defer resp.Body.Close()
 
@@ -53,4 +51,3 @@ func PicFolderDownloadAndSavePhoto() error {
 
 	return nil
 }
-
