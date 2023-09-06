@@ -106,7 +106,7 @@ export default {
 
 	<ProfileDetails :userid="uid"></ProfileDetails>
 
-	<Post v-if="seePosts" v-for="pid in user['user-post-ids']" :postid="pid" @postDeleted="onPostDeleted"></Post>
+	<Post v-if="seePosts" v-for="pid in user['user-post-ids']" :postid="pid" :key="pid" @postDeleted="onPostDeleted"></Post>
 
 </div>
 </template>

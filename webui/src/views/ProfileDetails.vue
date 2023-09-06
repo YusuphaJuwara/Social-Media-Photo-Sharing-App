@@ -53,7 +53,6 @@ export default {
       userFollowings: [],
       userBans: [],
 
-			isValid: false,
 			form: {
         picture: null,
 				pictureError: false,
@@ -62,7 +61,7 @@ export default {
       fol: false,
 
       ban: false,
-      private: false,
+      priv: false,
 
       isUsernameValid: false,
       username: '',
@@ -107,9 +106,9 @@ export default {
       }
 
       const response = await this.$axios.get("/users/" + this.userid + "/private-profile");
-      this.private = response.data ? true : false
+      this.priv = response.data ? true : false
 
-      console.log("ProfileDetails.vue -> getUserProfile(): \nthis.private = response.data ? true : false: "+this.private+"\nresponse.data"+response.data)
+      console.log("ProfileDetails.vue -> getUserProfile(): \nthis.private = response.data ? true : false: "+this.priv+"\nresponse.data"+response.data)
 
       await this.getBanUsers();
       await this.getUserFollows();
@@ -579,12 +578,12 @@ export default {
 	  },
 
     toggleP() {
-      if (this.private) {
+      if (this.priv) {
         this.setPublic()
       } else {
         this.setPrivate()
       }
-      this.private = !this.private
+      this.priv = !this.priv
 	  },
 
     validateUsername() {
@@ -663,7 +662,7 @@ export default {
       </div>
       <div class="col-md-2 m-1 d-flex justify-content-center">
         <button class="btn btn-primary me-3" type="button" @click="toggleP()">
-          {{ !private ? 'Set Private':'Set Public' }}
+          {{ !priv ? 'Set Private':'Set Public' }}
         </button>
       </div>
       <div class="col-md-2 m-1 d-flex justify-content-center">

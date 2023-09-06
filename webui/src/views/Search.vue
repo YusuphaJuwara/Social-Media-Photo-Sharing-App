@@ -169,7 +169,7 @@ export default {
       v-if="userids.length===0"> 
         No user profile name corresponds to the search term.
       </div>
-      <div class="card m-2" style="border: 1px solid rgb(0, 94, 255);" v-if="userids.length>0" v-for="(user, idx) in users" >
+      <div class="card m-2" style="border: 1px solid rgb(0, 94, 255);" v-if="userids.length>0" v-for="(user, idx) in users" :key="user['user-id']">
         <div class="card-header m-2">
           <LinkToUserProfile
           :profpic="profilePics[idx]" 
@@ -193,7 +193,7 @@ export default {
       </div>
     </div>
 
-    <Post v-if="!loading && postids.length>0" v-for="pid in postids" :postid="pid" @postDeleted="onPostDeleted"></Post>
+    <Post v-if="!loading && postids.length>0" v-for="pid in postids" :postid="pid" :key="pid" @postDeleted="onPostDeleted"></Post>
   
   </div>
   </template>

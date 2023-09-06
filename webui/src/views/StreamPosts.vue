@@ -71,6 +71,6 @@ export default {
     <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
     <LoadingSpinner v-if="loading"></LoadingSpinner>
   
-    <Post v-for="post in posts" :postid="post['post-id']" @postDeleted="onPostDeleted"></Post>
+    <Post v-for="post in posts" :postid="post['post-id']" :key="post['post-id']" @postDeleted="onPostDeleted"></Post>
   </div>
 </template>

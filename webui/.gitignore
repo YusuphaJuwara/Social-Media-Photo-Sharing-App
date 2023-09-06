@@ -25,4 +25,4 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-/webapi
+webapi

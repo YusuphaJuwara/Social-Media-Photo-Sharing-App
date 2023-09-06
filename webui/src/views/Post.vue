@@ -678,8 +678,8 @@ export default {
 
 								<NoLinkToUserProfile v-if="banners.includes(comment['user-id'])" ></NoLinkToUserProfile>
 							</div>
-							<div class="col-md-3 justify-content-end">
-								<button v-if="userid===comment['user-id'] || userid==post['user-id']" @click="uncommentPhoto(comment['comment-id'])">Delete</button>
+							<div class="col-md-3 justify-content-end" v-if="userid===comment['user-id'] || userid==post['user-id']">
+								<button @click="uncommentPhoto(comment['comment-id'])">Delete</button>
 							</div>
 						</div>
 					</div>

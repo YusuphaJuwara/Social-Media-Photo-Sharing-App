@@ -125,12 +125,11 @@ export default {
       <label for="hashtags" class="form-label">Hashtags:</label>
       <textarea id="hashtags" class="form-control" v-model="form.hashtags" @mouseover="showHint('hashtags')" placeholder="culPic, gr8, nice"></textarea>
     </div>
-    <div>
-      <button v-if="!loading" :disabled="!isValid" type="button" class="btn btn-primary" @click="uploadPhoto">
+    <div v-if="!loading">
+      <button :disabled="!isValid" type="button" class="btn btn-primary" @click="uploadPhoto">
       Create Post
       </button>
     </div>
-    <!--/form-->
     <div v-if="hint" class="hint">{{ hint }}</div>
   </div>
 </template>

@@ -17,3 +17,4 @@ docker-compose.log
 .editorconfig
 *.db
 pictures/
+webapi

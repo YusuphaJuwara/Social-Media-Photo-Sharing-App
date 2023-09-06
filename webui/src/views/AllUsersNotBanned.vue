@@ -64,7 +64,7 @@ export default {
 	<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
 	<LoadingSpinner v-if="loading"></LoadingSpinner>
 
-  <div class="card m-2" style="border: 1px solid red;" v-if="!loading" v-for="(user, idx) in users" >
+  <div class="card m-2" style="border: 1px solid red;" v-if="!loading" v-for="(user, idx) in users" :key="user['user-id']">
     <div class="card-header m-2">
       <LinkToUserProfile
       :profpic="userProfilePics[idx]" 
