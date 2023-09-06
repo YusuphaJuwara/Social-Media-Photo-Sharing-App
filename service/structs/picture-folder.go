@@ -10,7 +10,7 @@ import (
 )
 
 const PicFolder = "/tmp/pictures"
-const URL = "https://w7.pngwing.com/pngs/269/897/png-transparent-family-cosmetic-dentistry-family-smile-happy-family-child-photography-people-thumbnail.png"
+const URL = "https://www.pngall.com/wp-content/uploads/5/Profile-Male-PNG.png"
 const FileName = "ffffffff-ffff-ffff-ffff-ffffffffffff.png"
 
 func PicFolderDownloadAndSavePhoto() error {
