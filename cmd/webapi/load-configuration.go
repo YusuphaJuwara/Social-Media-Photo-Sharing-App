@@ -41,11 +41,11 @@ func loadConfiguration() (WebAPIConfiguration, error) {
 	// Try to load configuration from environment variables and command line switches
 	if err := conf.Parse(os.Args[1:], "CFG", &cfg); err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
-			usage, err := conf.Usage("CFG", &cfg)
+			_, err := conf.Usage("CFG", &cfg)
 			if err != nil {
 				return cfg, fmt.Errorf("generating config usage: %w", err)
 			}
-			fmt.Println(usage)
+
 			return cfg, conf.ErrHelpWanted
 		}
 		return cfg, fmt.Errorf("parsing config: %w", err)
