@@ -17,6 +17,7 @@ export default {
 			loading: false,
       userid: '',
 			user: {},
+			posts: [],
 
 		}
 	},
@@ -27,6 +28,12 @@ export default {
       try {
         let response = await this.$axios.get("/users/"+this.userid);
         this.user = response.data;
+
+				if (this.user['user-post-ids'] != null){
+					this.posts = this.user['user-post-ids'].slice().reverse();
+				} else {
+					this.posts = [];
+				}
 
 				console.log("Profile: user: "+this.user);
 
@@ -61,7 +68,10 @@ export default {
 
 	<ProfileDetails :userid="userid"></ProfileDetails>
 
-	<Post v-for="pid in user['user-post-ids']" :postid="pid" :key="pid" @postDeleted="onPostDeleted"></Post>
+	<Post v-for="pid in posts" 
+		:postid="pid" 
+		:key="pid" 
+		@postDeleted="onPostDeleted"></Post>
 
 </div>
 </template>

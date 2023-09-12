@@ -17,6 +17,7 @@ export default {
       userid: '',
       uid: '',
 			user: {},
+			posts: [],
 
 			// Check if the logged in user (userid) can see the posts of the uid
 			seePosts: false,
@@ -30,6 +31,12 @@ export default {
       try {
         let response = await this.$axios.get("/users/"+this.uid);
         this.user = response.data;
+
+				if (this.user['user-post-ids'] != null){
+					this.posts = this.user['user-post-ids'].slice().reverse();
+				} else {
+					this.posts = [];
+				}
 
         console.log("ProfileOtherUsers: user: "+this.user);
 

@@ -752,6 +752,10 @@ export default {
     </div>
   </div>
 
+  <div class="m-4">
+    <h2 style="color: tomato;" class="d-flex justify-content-center p-2">Post Count: {{ user['post-count'] }}</h2>
+  </div>
+
   <!-- Followers -->
   <div class="container mt-3 mb-2" style="border: 2px solid violet;" v-if="showFollower && followers.length>0">
     <div class="card m-2 p-2">

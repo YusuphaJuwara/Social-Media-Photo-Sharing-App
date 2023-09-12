@@ -23,7 +23,12 @@ export default {
 			this.errormsg = null;
 			try {
 				let response = await this.$axios.get("/users/" + this.userid + "/posts/stream/");
-				this.posts = response.data;
+				
+				if (response.data != null){
+					this.posts = response.data.slice().reverse();
+				} else {
+					this.posts = [];
+				}
 			} catch (e) {
 				this.errormsg = e.toString();
 			} finally{
