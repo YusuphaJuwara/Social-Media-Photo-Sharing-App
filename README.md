@@ -1,6 +1,6 @@
 # Wasa Photo Sharing App
 
-This is the [Web and Software Architecture (WaSA)](http://gamificationlab.uniroma1.it/en/wasa/) course project. You need permissions and the wasa virtual machine to build and run this project. The permissions and the wasa vm are aslo needed to build and run docker containers for the project (Scroll down to read how to build and run docker containers).
+This is the [Web and Software Architecture (WaSA)](http://gamificationlab.uniroma1.it/en/wasa/) course project. You need permissions and the wasa virtual machine to build and run this project. The permissions and the wasa vm are also needed to build and run docker containers for the project (Scroll down to read how to build and run docker containers).
 
 ## Read the project specification
 [Project Specs](http://gamificationlab.uniroma1.it/notes/Project.pdf)
@@ -45,19 +45,19 @@ A user has:
 	- He can click on their profiles and follow them if he wants
 	- Etc
 
-All users containing:
+- All users containing:
 	- All the users whom he followed (Provided not banned by them)
 	- All the users whom he did not follow but did not set their profiles to private (Provided not banned by them)
 	- The user can view other user profiles and follow them, ban them, etc
 	- Etc 
 
-Search:
+- Search:
 	- Search a user by his profile name (not username -> the project requirements)
 	- Search a post by one of its hashtags
 	- The search checks if there are user profile names and/or post hashtags that correspond to the serch term
 	- It returns two arrays: one for the users if any, the other for the posts if any
 
-Login:
+- Login:
 	- A user must login before making any further requests
 	- If its the first time, the user is loged in
 	- Else, his account is created (read the project equirements about login)
@@ -65,7 +65,7 @@ Login:
 	- Any subsequent request must also send the session token, else, Unauthorized error
 	- It routes the user to the profile page for first time users, else to the Stream profile (Feed)
 
-Log out:
+- Log out:
 	- This logs out the user if he is currently logged in and rounds the user ro the log in.
 
 ## Project structure
