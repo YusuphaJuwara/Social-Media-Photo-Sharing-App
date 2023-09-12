@@ -1,52 +1,72 @@
-# Fountains!
-
-This is an example of web application for [Web and Software Application](http://gamificationlab.uniroma1.it/en/wasa/)
-course.
-
-See the [Fantastic Coffee (decaffeinated)](https://github.com/sapienzaapps/fantastic-coffee-decaffeinated) template for
-instructions and project structure.
-
-Note: this example uses SQLite, however you may implement a "naive" database using slices and maps.
-
-## How to build container images
-
-### Backend
-
-```sh
-$ docker build -t wasa-photos-backend:latest -f Dockerfile.backend .
-```
-
-### Frontend
-
-```sh
-$ docker build -t wasa-photos-frontend:latest -f Dockerfile.frontend .
-```
-
-## How to run container images
-
-### Backend
-
-```sh
-$ docker run -it --rm -p 3000:3000 wasa-photos-backend:latest
-```
-
-### Frontend
-
-```
-$ docker run -it --rm -p 8081:80 wasa-photos-frontend:latest
-```
----
----
----
-
 # Wasa Photo Sharing App
-# Fantastic coffee (decaffeinated)
 
-This repository contains the basic structure for [Web and Software Application](http://gamificationlab.uniroma1.it/en/wasa/) homework project.
-It has been described in class.
+This is the [Web and Software Architecture (WaSA)](http://gamificationlab.uniroma1.it/en/wasa/) course project. You need permissions and the wasa virtual machine to build and run this project. The permissions and the wasa vm are aslo needed to build and run docker containers for the project (Scroll down to read how to build and run docker containers).
 
-"Fantastic coffee (decaffeinated)" is a simplified version for the WASA course, not suitable for a production environment.
-The full version can be found in the "Fantastic Coffee" repository.
+## Read the project specification
+[Project Specs](http://gamificationlab.uniroma1.it/notes/Project.pdf)
+
+### Summary:
+A user has:
+- Profile page containing:
+	- Profile picture
+	- Change or delete the profile picture
+	- Change user details (profile name, birthdate, gender, profile msg)
+	- Modify username (the profile name is, as default, set to the username)
+	- Delete account and all the user's data
+	- Set profile to public or private
+	- All posts of the user in reversed chronological order
+	- User follwers, followings, banned users, and their counts
+	- Etc
+
+- Post containing:
+	- A view component called in "Stream Posts", "All Posts", and "Profile"
+	- Photo(required)
+	- Hashtags
+	- Captions
+	- Date and Time posted
+	- Likes count and Likers' profile names and profile pics (little, round thumbnail)
+	- Comment count and Commenters' profile names and profile pics (little, round thumbnail)
+	- Like the post and unlike
+	- Comment on the post (even multiple times), and only the commenter or the user on whose post the comment is placed can delete it
+	- Etc
+
+- Stream Posts (Feed):
+	- This calls the post component
+	- It contains only posts of the user himself and those whom he followed (Provided not banned by them)
+	- Etc
+
+- All Posts:
+	- This also calls the post component
+	- It contains :
+		- All posts of the user himself
+		- Those whom he followed (Provided not banned by them)
+		- Those whom he did not follow but did not set their profiles to private (Provided not banned by them)
+	- Essentially, this allows the user to see other users' posts even if he didn't follow them.
+	- He can click on their profiles and follow them if he wants
+	- Etc
+
+All users containing:
+	- All the users whom he followed (Provided not banned by them)
+	- All the users whom he did not follow but did not set their profiles to private (Provided not banned by them)
+	- The user can view other user profiles and follow them, ban them, etc
+	- Etc 
+
+Search:
+	- Search a user by his profile name (not username -> the project requirements)
+	- Search a post by one of its hashtags
+	- The search checks if there are user profile names and/or post hashtags that correspond to the serch term
+	- It returns two arrays: one for the users if any, the other for the posts if any
+
+Login:
+	- A user must login before making any further requests
+	- If its the first time, the user is loged in
+	- Else, his account is created (read the project equirements about login)
+	- In any case, a seesion token and a user id are returned; session id as an "authorization" header, user id as a json object
+	- Any subsequent request must also send the session token, else, Unauthorized error
+	- It routes the user to the profile page for first time users, else to the Stream profile (Feed)
+
+Log out:
+	- This logs out the user if he is currently logged in and rounds the user ro the log in.
 
 ## Project structure
 
@@ -81,18 +101,6 @@ For more information about vendoring:
 
 This repository contains the `webui/node_modules` directory with all dependencies for Vue.JS. You should commit the content of that directory and both `package.json` and `package-lock.json`.
 
-## How to set up a new project from this template
-
-You need to:
-
-* Change the Go module path to your module path in `go.mod`, `go.sum`, and in `*.go` files around the project
-* Rewrite the API documentation `doc/api.yaml`
-* If no web frontend is expected, remove `webui` and `cmd/webapi/register-webui.go`
-* If no cronjobs or health checks are needed, remove them from `cmd/`
-* Update top/package comment inside `cmd/webapi/main.go` to reflect the actual project usage, goal, and general info
-* Update the code in `run()` function (`cmd/webapi/main.go`) to connect to databases or external resources
-* Write API code inside `service/api`, and create any further package inside `service/` (or subdirectories)
-
 ## How to build
 
 If you're not using the WebUI, or if you don't want to embed the WebUI into the final executable, then:
@@ -126,6 +134,34 @@ If you want to launch the WebUI, open a new tab and launch:
 ./open-npm.sh
 # (here you're inside the NPM container)
 npm run dev
+```
+
+## How to build container images
+
+### Backend
+
+```sh
+$ docker build -t wasa-photos-backend:latest -f Dockerfile.backend .
+```
+
+### Frontend
+
+```sh
+$ docker build -t wasa-photos-frontend:latest -f Dockerfile.frontend .
+```
+
+## How to run container images
+
+### Backend
+
+```sh
+$ docker run -it --rm -p 3000:3000 wasa-photos-backend:latest
+```
+
+### Frontend
+
+```
+$ docker run -it --rm -p 8081:80 wasa-photos-frontend:latest
 ```
 
 ## Known issues
